@@ -7,7 +7,10 @@ package ru.rzd.otchet;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -34,10 +37,29 @@ public class DAOOtchet {
                 //            String connectionUrl2 = "jdbc:sqlserver://10.58.3.168;"
 //                    + "databaseName=CallCenter;user=Client;password=123456789;";
                 connection = DriverManager.getConnection(connectionUrl1);
+                simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
             } catch (SQLException ex) {
                 Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+
+    private PreparedStatement simpleReq;
+
+    public ResultSet getSimpleRequest() {
+        ResultSet rs = null;
+        try {
+            rs = simpleReq.executeQuery();
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Проверка не пройдена.");
+            Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return rs;
+    }
+
+    public ResultSet getPeriod(Calendar date) {
+
+        throw new NoSuchMethodError();
     }
 
 }
