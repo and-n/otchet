@@ -25,22 +25,34 @@ public class DAOOtchet {
 
     public DAOOtchet() {
         if (connection == null) {
-            try {
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            } catch (ClassNotFoundException ex) {
-                JOptionPane.showMessageDialog(null, "Нет драйвера базы!!!", null, JOptionPane.ERROR_MESSAGE);
-                Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            String connectionUrl1 = "jdbc:sqlserver://10.58.50.6\\CRSSQL;"
-                    + "databaseName=db_cra;user=SQLview;password=QwErFdSa1234;";
-            try {
-                //            String connectionUrl2 = "jdbc:sqlserver://10.58.3.168;"
+            connect();
+        }
+    }
+
+    private void connect() {
+        try {
+            Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        } catch (ClassNotFoundException ex) {
+            JOptionPane.showMessageDialog(null, "Нет драйвера базы!!!", null, JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(0);
+        }
+        String connectionUrl1 = "jdbc:sqlserver://10.58.50.6\\CRSSQL;"
+                + "databaseName=db_cra;user=SQLview;password=QwErFdSa1234;";
+        try {
+            //            String connectionUrl2 = "jdbc:sqlserver://10.58.3.168;"
 //                    + "databaseName=CallCenter;user=Client;password=123456789;";
-                connection = DriverManager.getConnection(connectionUrl1);
-                simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
-            } catch (SQLException ex) {
-                Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
+            connection = DriverManager.getConnection(connectionUrl1);
+            simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
+        } catch (SQLException ex) {
+            Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
+            int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);
+            if (i == JOptionPane.YES_OPTION) {
+                connect();
+            } else {
+                System.exit(1);
             }
+
         }
     }
 

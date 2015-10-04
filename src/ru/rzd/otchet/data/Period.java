@@ -16,9 +16,6 @@ public class Period {
 
     private Date startTime, stopTime;
     private Long calls, lostCalls, lostCallsIn5Sec;
-    private int talkTime, answerTine, outTime, answerIn20Sec;
-    
-    
-    
+    private int talkTime, answerTime, outTime, answerIn20Sec;
 
 }

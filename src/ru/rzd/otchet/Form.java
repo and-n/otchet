@@ -1,8 +1,5 @@
 package ru.rzd.otchet;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
@@ -23,9 +20,11 @@ public class Form extends javax.swing.JFrame {
      * Creates new form Form
      */
     public Form() {
-
         initComponents();
+        logic = new Logic();
     }
+
+    private Logic logic;
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -120,20 +119,7 @@ public class Form extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        DAOOtchet spravka = new DAOOtchet();
-        ResultSet res = spravka.getSimpleRequest();
-        if (res != null) {
-            try {
-                res.next();
-                System.out.println("Есть контакт " + res.getInt(1));
-            } catch (SQLException ex) {
-                Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            Calendar selectedDate = dateChooserCombo1.getSelectedDate();
-
-        } else {
-            System.err.println("res=null");
-        }
+        logic.getReportByDay(dateChooserCombo1.getSelectedDate());
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
