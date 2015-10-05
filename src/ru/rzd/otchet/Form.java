@@ -1,7 +1,9 @@
 package ru.rzd.otchet;
 
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -119,7 +121,12 @@ public class Form extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        logic.getReportByDay(dateChooserCombo1.getSelectedDate());
+        try {
+            logic.getReportByDay(dateChooserCombo1.getSelectedDate());
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Ошибка при запросе.");
+            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**

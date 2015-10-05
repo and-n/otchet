@@ -21,21 +21,24 @@ public class Logic {
      * Запрос данных из базы и формирование справки.
      *
      */
-    public void getReportByDay(Calendar calendar) {
+    public void getReportByDay(Calendar calendar) throws SQLException {
         DAOOtchet spravka = new DAOOtchet();
-        ResultSet res = spravka.getSimpleRequest();
+
+//        ResultSet res = spravka.getSimpleRequest();
+        ResultSet res = spravka.get30minPeriod(calendar);
         if (res != null) {
             try {
-                res.next();
+                System.out.println("next " + res.next());
                 System.out.println("Есть контакт " + res.getInt(1));
+                int i = 1;
+                while (res.next()) {
+                    i++;
+                }
+                System.out.println("RES " + i);
             } catch (SQLException ex) {
                 Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
-            
-            
-            
-            
+
         } else {
             System.err.println("res=null");
         }
