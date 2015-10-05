@@ -6,7 +6,6 @@
 package ru.rzd.otchet;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,7 +46,11 @@ public class DAOOtchet {
             connection = DriverManager.getConnection(connectionUrl1);
             simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
 //            get30minPeriod = connection.prepareCall("Select * from ContactCallDetail where startdatetime > ? and startdatetime < ?");
-            getPeriod = connection.prepareCall("Select * from ContactCallDetail where startDateTime > ? and startDateTime < ?");
+//            getPeriod = connection.prepareCall("Select * from ContactCallDetail c where c.startDateTime > ? and c.startDateTime < ?");
+            getPeriod = connection.prepareCall("Select c.connectTime, q.queueTime, a.ringTime, a.talkTime from ContactCallDetail c"
+                    + " inner join ContactQueueDetail q ON c.sessionID = q.sessionID "
+                    + " left join AgentConnectionDetail a ON a.sessionID =q.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
+                    + "   order by c.startDateTime ");
         } catch (SQLException ex) {
             Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
             int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);
@@ -74,23 +77,18 @@ public class DAOOtchet {
     public ResultSet get30minPeriod(Calendar date) throws SQLException {
         date.setFirstDayOfWeek(Calendar.MONDAY);
         getPeriod.clearParameters();
-        Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH), 0, 0, 0, 1);
-        date.set(date.get(Calendar.YEAR), date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
-        date.set(Calendar.MILLISECOND, 0);
+        Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
+                date.get(Calendar.HOUR), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
         Timestamp end = new Timestamp(tStart.getTime());
 //        end.setHours(23);
-        end.setMinutes(29);
+        end.setMinutes(end.getMinutes() + 29);
         end.setSeconds(59);
         end.setNanos(999999);
-//                end.set(Calendar.MINUTE, 59);
-//        end.set(Calendar.SECOND, 59);
-//        end.set(Calendar.MILLISECOND, 999);
         getPeriod.setTimestamp(1, tStart);
         getPeriod.setTimestamp(2, end);
         System.out.println("Date " + tStart + "  END " + end);
         System.out.println("date2 " + tStart.equals(end));
         ResultSet res = getPeriod.executeQuery();
-//        throw new NoSuchMethodError();
         return res;
     }
 

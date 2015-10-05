@@ -5,8 +5,6 @@
  */
 package ru.rzd.otchet.data;
 
-import java.util.Date;
-
 /**
  * Один период в отчете.
  *
@@ -14,8 +12,10 @@ import java.util.Date;
  */
 public class Period {
 
-    private Date startTime, stopTime;
-    private Long calls, lostCalls, lostCallsIn5Sec;
-    private int talkTime, answerTime, outTime, answerIn20Sec;
+    private int calls, lostCalls, lostCallsIn5Sec, talkTime, answerTime, queueTime, answerIn20Sec = 0;
+
+    public void addCall(boolean isLost, int talkTime, int answerTime, int outTime) {
+
+    }
 
 }

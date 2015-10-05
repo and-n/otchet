@@ -59,19 +59,15 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="jProgressBar1" alignment="0" max="32767" attributes="0"/>
           <Group type="102" attributes="0">
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" attributes="0">
-                      <EmptySpace min="-2" pref="25" max="-2" attributes="0"/>
-                      <Component id="jButton1" min="-2" pref="194" max="-2" attributes="0"/>
-                  </Group>
-                  <Group type="102" alignment="0" attributes="0">
-                      <EmptySpace min="-2" pref="44" max="-2" attributes="0"/>
-                      <Component id="dateChooserCombo1" min="-2" max="-2" attributes="0"/>
-                  </Group>
-              </Group>
-              <EmptySpace pref="266" max="32767" attributes="0"/>
+              <EmptySpace min="-2" pref="153" max="-2" attributes="0"/>
+              <Component id="dateChooserCombo1" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="32767" attributes="0"/>
+          </Group>
+          <Group type="102" alignment="1" attributes="0">
+              <EmptySpace pref="47" max="32767" attributes="0"/>
+              <Component id="jButton1" min="-2" pref="392" max="-2" attributes="0"/>
+              <EmptySpace min="-2" pref="46" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -81,9 +77,8 @@
               <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
               <Component id="dateChooserCombo1" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-              <Component id="jButton1" min="-2" pref="100" max="-2" attributes="0"/>
-              <EmptySpace pref="158" max="32767" attributes="0"/>
-              <Component id="jProgressBar1" min="-2" max="-2" attributes="0"/>
+              <Component id="jButton1" min="-2" pref="58" max="-2" attributes="0"/>
+              <EmptySpace pref="119" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -94,13 +89,12 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Times New Roman" size="24" style="1"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="&#x41e;&#x442;&#x447;&#x451;&#x442;"/>
+        <Property name="text" type="java.lang.String" value="&#x421;&#x43f;&#x440;&#x430;&#x432;&#x43a;&#x430; &#x43f;&#x43e; &#x438;&#x442;&#x43e;&#x433;&#x430;&#x43c; &#x441;&#x443;&#x442;&#x43e;&#x43a;"/>
+        <Property name="toolTipText" type="java.lang.String" value=""/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton1ActionPerformed"/>
       </Events>
-    </Component>
-    <Component class="javax.swing.JProgressBar" name="jProgressBar1">
     </Component>
     <Component class="datechooser.beans.DateChooserCombo" name="dateChooserCombo1">
     </Component>
