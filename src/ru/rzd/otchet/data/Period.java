@@ -24,7 +24,7 @@ public class Period {
                 calls--;
             }
             answerTime += ansTime;
-            talkTime += talkTime;
+            this.talkTime += talkTime;
         } else {
             lostCalls++;
             lostCallsIn5Sec = outTime <= 5 ? lostCallsIn5Sec++ : lostCallsIn5Sec;

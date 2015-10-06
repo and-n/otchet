@@ -76,7 +76,7 @@ public class DAOOtchet {
         date.setFirstDayOfWeek(Calendar.MONDAY);
         getPeriod.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
-                date.get(Calendar.HOUR), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
+                date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
         Timestamp end = new Timestamp(tStart.getTime());
 //        end.setHours(23);
         end.setMinutes(end.getMinutes() + 29);
@@ -85,7 +85,6 @@ public class DAOOtchet {
         getPeriod.setTimestamp(1, tStart);
         getPeriod.setTimestamp(2, end);
         System.out.println("Date " + tStart + "  END " + end);
-        System.out.println("date2 " + tStart.equals(end));
         ResultSet res = getPeriod.executeQuery();
         return res;
     }
