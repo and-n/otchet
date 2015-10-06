@@ -12,10 +12,77 @@ package ru.rzd.otchet.data;
  */
 public class Period {
 
-    private int calls, lostCalls, lostCallsIn5Sec, talkTime, answerTime, queueTime, answerIn20Sec = 0;
+    private int calls, lostCalls, lostCallsIn5Sec, talkTime, answerTime, queueTime, answerIn20Sec;
 
-    public void addCall(boolean isLost, int talkTime, int answerTime, int outTime) {
+    public void addCall(boolean isLost, int outTime, int talkTime, int ansTime) {
+        queueTime += outTime;
+        calls++;
+        if (!isLost) {
+            answerIn20Sec = outTime <= 20 ? answerIn20Sec : answerIn20Sec++;
 
+            if (ansTime == 10 && talkTime == 0) {
+                calls--;
+            }
+            answerTime += ansTime;
+            talkTime += talkTime;
+        } else {
+            lostCalls++;
+            lostCallsIn5Sec = outTime <= 5 ? lostCallsIn5Sec++ : lostCallsIn5Sec;
+        }
+    }
+
+    public Period() {
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 29 * hash + this.calls;
+        hash = 29 * hash + this.lostCalls;
+        hash = 29 * hash + this.lostCallsIn5Sec;
+        hash = 29 * hash + this.talkTime;
+        hash = 29 * hash + this.answerTime;
+        hash = 29 * hash + this.queueTime;
+        hash = 29 * hash + this.answerIn20Sec;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Period other = (Period) obj;
+        if (this.calls != other.calls) {
+            return false;
+        }
+        if (this.lostCalls != other.lostCalls) {
+            return false;
+        }
+        if (this.lostCallsIn5Sec != other.lostCallsIn5Sec) {
+            return false;
+        }
+        if (this.talkTime != other.talkTime) {
+            return false;
+        }
+        if (this.answerTime != other.answerTime) {
+            return false;
+        }
+        if (this.queueTime != other.queueTime) {
+            return false;
+        }
+        if (this.answerIn20Sec != other.answerIn20Sec) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Period{" + "calls=" + calls + ", lostCalls=" + lostCalls + ", lostCallsIn5Sec=" + lostCallsIn5Sec + ", talkTime=" + talkTime + ", answerTime=" + answerTime + ", queueTime=" + queueTime + ", answerIn20Sec=" + answerIn20Sec + '}';
     }
 
 }

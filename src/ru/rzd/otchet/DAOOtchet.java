@@ -47,10 +47,7 @@ public class DAOOtchet {
             simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
 //            get30minPeriod = connection.prepareCall("Select * from ContactCallDetail where startdatetime > ? and startdatetime < ?");
 //            getPeriod = connection.prepareCall("Select * from ContactCallDetail c where c.startDateTime > ? and c.startDateTime < ?");
-            getPeriod = connection.prepareCall("Select c.connectTime, q.queueTime, a.ringTime, a.talkTime from ContactCallDetail c"
-                    + " inner join ContactQueueDetail q ON c.sessionID = q.sessionID "
-                    + " left join AgentConnectionDetail a ON a.sessionID =q.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
-                    + "   order by c.startDateTime ");
+
         } catch (SQLException ex) {
             Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
             int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);
@@ -66,15 +63,16 @@ public class DAOOtchet {
     private PreparedStatement simpleReq;
 
     public ResultSet getSimpleRequest() throws SQLException {
-        ResultSet rs = null;
-        rs = simpleReq.executeQuery();
-
+        ResultSet rs = simpleReq.executeQuery();
         return rs;
     }
 
-    private PreparedStatement getPeriod;
-
     public ResultSet get30minPeriod(Calendar date) throws SQLException {
+
+        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime from ContactCallDetail c"
+                + " inner join ContactQueueDetail q ON c.sessionID = q.sessionID "
+                + " left join AgentConnectionDetail a ON a.sessionID =q.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
+                + "   order by c.startDateTime ");
         date.setFirstDayOfWeek(Calendar.MONDAY);
         getPeriod.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
