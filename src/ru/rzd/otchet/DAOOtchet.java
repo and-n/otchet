@@ -73,7 +73,7 @@ public class DAOOtchet {
                 + " inner join ContactQueueDetail q ON c.sessionID = q.sessionID "
                 + " left join AgentConnectionDetail a ON a.sessionID =q.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
                 + "   order by c.startDateTime ");
-        date.setFirstDayOfWeek(Calendar.MONDAY);
+//        date.setFirstDayOfWeek(Calendar.MONDAY);
         getPeriod.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
                 date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);

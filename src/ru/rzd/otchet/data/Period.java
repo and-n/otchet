@@ -18,7 +18,7 @@ public class Period {
         queueTime += outTime;
         calls++;
         if (!isLost) {
-            answerIn20Sec = outTime <= 20 ? answerIn20Sec : answerIn20Sec++;
+            answerIn20Sec = ansTime <= 20 ? answerIn20Sec : answerIn20Sec++;
 
             if (ansTime == 10 && talkTime == 0) {
                 calls--;
@@ -31,7 +31,32 @@ public class Period {
         }
     }
 
-    public Period() {
+    public int getCalls() {
+        return calls;
+    }
+
+    public int getLostCalls() {
+        return lostCalls;
+    }
+
+    public int getLostCallsIn5Sec() {
+        return lostCallsIn5Sec;
+    }
+
+    public int getTalkTime() {
+        return talkTime;
+    }
+
+    public int getAnswerTime() {
+        return answerTime;
+    }
+
+    public int getQueueTime() {
+        return queueTime;
+    }
+
+    public int getAnswerIn20Sec() {
+        return answerIn20Sec;
     }
 
     @Override
@@ -82,7 +107,10 @@ public class Period {
 
     @Override
     public String toString() {
-        return "Period{" + "calls=" + calls + ", lostCalls=" + lostCalls + ", lostCallsIn5Sec=" + lostCallsIn5Sec + ", talkTime=" + talkTime + ", answerTime=" + answerTime + ", queueTime=" + queueTime + ", answerIn20Sec=" + answerIn20Sec + '}';
+        return "Period{" + "calls=" + calls + ", lostCalls=" + lostCalls
+                + ", lostCallsIn5Sec=" + lostCallsIn5Sec + ", talkTime=" + talkTime
+                + ", answerTime=" + answerTime + ", queueTime=" + queueTime
+                + ", answerIn20Sec=" + answerIn20Sec + '}';
     }
 
 }

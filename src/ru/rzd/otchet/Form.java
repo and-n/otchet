@@ -1,11 +1,18 @@
 package ru.rzd.otchet;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import org.apache.poi.ss.usermodel.Workbook;
+import ru.rzd.otchet.data.Period;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -22,11 +29,11 @@ public class Form extends javax.swing.JFrame {
      * Creates new form Form
      */
     public Form() {
+        this.logic = new Logic();
         initComponents();
-        logic = new Logic();
     }
 
-    private Logic logic;
+    private final Logic logic;
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -109,7 +116,7 @@ public class Form extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-        System.out.println("LOL");
+        System.out.println("start");
         // TODO add your handling code here:
     }//GEN-LAST:event_formWindowOpened
 
@@ -119,9 +126,19 @@ public class Form extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         try {
-            logic.getReportByDay(dateChooserCombo1.getSelectedDate());
+            Calendar date = dateChooserCombo1.getSelectedDate();
+            List<Period> report = logic.getReportByDay(date);
+            Workbook wb = logic.createPeriodInSpravka(date, report);
+            FileOutputStream fos = new FileOutputStream("test.xls");
+            wb.write(fos);
+            wb.close();
+            fos.close();
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Ошибка при запросе.");
+            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -138,13 +155,7 @@ public class Form extends javax.swing.JFrame {
         //</editor-fold>
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
         }
         /* Create and display the form */
