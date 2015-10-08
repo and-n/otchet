@@ -97,12 +97,11 @@ public class Logic {
             try {
                 wb = new HSSFWorkbook(new FileInputStream(f));
                 Sheet sheet = wb.getSheetAt(0);
-                System.out.println("ROWWW " + sheet.getSheetName());
                 for (int i = 13; i < 61; i++) {
                     Row row = sheet.getRow(i);
                     addPeriodRow(row, periodList.get(i - 13), date);
                 }
-
+                createHead(date, periodList, sheet);
             } catch (IOException ex) {
                 Logger.getLogger(Logic.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -139,8 +138,53 @@ public class Logic {
         Cell c8 = row.getCell(8);
         int db8 = ansCalls == 0 ? 0 : new BigDecimal(period.getQueueTime()).divide(new BigDecimal(period.getCalls()), RoundingMode.HALF_EVEN).intValueExact();
         c8.setCellValue(db8);
+        Cell c9 = row.getCell(9);
+        c9.setCellValue(period.getLostCallsIn5Sec());
+        Cell c10 = row.getCell(10);
+        BigDecimal db10 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        c10.setCellValue(db10.doubleValue());
+        Cell c11 = row.getCell(11);
+        BigDecimal db11 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls() - period.getLostCallsIn5Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        c11.setCellValue(db11.doubleValue());
 
-//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Cell c12 = row.getCell(12);
+        BigDecimal db12 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
+        c12.setCellValue(db12.doubleValue());
+    }
+
+    private void createHead(Calendar date, List<Period> periodList, Sheet sheet) {
+        Cell c1 = sheet.getRow(0).getCell(2);
+        c1.setCellValue(date);
+        int all = 0;
+        int ans20 = 0;
+        int lost5 = 0;
+        int lost = 0;
+        for (Period p : periodList) {
+            all += p.getCalls();
+            lost += p.getLostCalls();
+            lost5 += p.getLostCallsIn5Sec();
+            ans20 += p.getAnswerIn20Sec();
+        }
+        Cell c2 = sheet.getRow(1).getCell(2);
+        c2.setCellValue(all);
+        Cell c3 = sheet.getRow(2).getCell(2);
+        c3.setCellValue(all - lost);
+        Cell c4 = sheet.getRow(3).getCell(2);
+        c4.setCellValue(ans20);
+
+        Cell c5 = sheet.getRow(4).getCell(2);
+        BigDecimal bd1 = new BigDecimal(ans20).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
+        c5.setCellValue(bd1.floatValue());
+        Cell c6 = sheet.getRow(5).getCell(2);
+        c6.setCellValue(lost5);
+
+        Cell c7 = sheet.getRow(6).getCell(2);
+        BigDecimal bd2 = new BigDecimal(lost).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
+        c7.setCellValue(bd2.floatValue());
+
+        Cell c8 = sheet.getRow(7).getCell(2);
+        BigDecimal bd3 = new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
+        c8.setCellValue(bd3.floatValue());
     }
 
 }
