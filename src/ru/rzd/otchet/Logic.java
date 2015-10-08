@@ -45,6 +45,8 @@ public class Logic {
      */
     public static final int REQUEST_TIMEOUT = 25;
 
+    public static final String ITOG_SUTOK = "Справка по итогам суток ";
+
     /**
      * Запрос из базы данных за сутки с разбивкой по пол часа.
      *
@@ -73,7 +75,6 @@ public class Logic {
             for (Future f : flist) {
                 Period p = (Period) f.get();
                 periods.add(p);
-                System.out.println("RESULT " + p);
             }
         } catch (InterruptedException | ExecutionException ex) {
             Logger.getLogger(Logic.class.getName()).log(Level.SEVERE, null, ex);
@@ -93,7 +94,6 @@ public class Logic {
         File f = new File("folder" + File.separator + "ШАБЛОН.xls");
 
         if (f.exists()) {
-            System.out.println("НАШЕЛ ШАБЛОН");
             try {
                 wb = new HSSFWorkbook(new FileInputStream(f));
                 Sheet sheet = wb.getSheetAt(0);
@@ -107,7 +107,7 @@ public class Logic {
             }
             return wb;
         } else {
-            JOptionPane.showMessageDialog(null, "не найден файл шаблона справки\n"
+            JOptionPane.showMessageDialog(null, "Не найден файл шаблона справки\n"
                     + "Файл \"ШАБЛОН.xls\" должен лежать в папке folder");
             System.exit(1);
         }
@@ -120,7 +120,7 @@ public class Logic {
 
     private void addPeriodRow(Row row, Period period, Calendar date) {
         Cell c2 = row.getCell(0);
-        c2.setCellValue(dateNames[Calendar.DAY_OF_WEEK - 1]);
+        c2.setCellValue(dateNames[date.get(Calendar.DAY_OF_WEEK) - 1]);
         Cell c1 = row.getCell(1);
         c1.setCellValue(df.format(date.getTime()));
         Cell c4 = row.getCell(4);
@@ -185,6 +185,11 @@ public class Logic {
         Cell c8 = sheet.getRow(7).getCell(2);
         BigDecimal bd3 = new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c8.setCellValue(bd3.floatValue());
+    }
+
+    String getFileName(String ITOG_SUTOK, Calendar date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
+        return ITOG_SUTOK + sdf.format(date.getTime());
     }
 
 }

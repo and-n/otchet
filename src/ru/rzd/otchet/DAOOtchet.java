@@ -41,13 +41,8 @@ public class DAOOtchet {
         String connectionUrl1 = "jdbc:sqlserver://10.58.50.6\\CRSSQL;"
                 + "databaseName=db_cra;user=SQLview;password=QwErFdSa1234;";
         try {
-            //            String connectionUrl2 = "jdbc:sqlserver://10.58.3.168;"
-//                    + "databaseName=CallCenter;user=Client;password=123456789;";
             connection = DriverManager.getConnection(connectionUrl1);
             simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
-//            get30minPeriod = connection.prepareCall("Select * from ContactCallDetail where startdatetime > ? and startdatetime < ?");
-//            getPeriod = connection.prepareCall("Select * from ContactCallDetail c where c.startDateTime > ? and c.startDateTime < ?");
-
         } catch (SQLException ex) {
             Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
             int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);
@@ -73,12 +68,10 @@ public class DAOOtchet {
                 + " inner join ContactQueueDetail q ON c.sessionID = q.sessionID "
                 + " left join AgentConnectionDetail a ON a.sessionID =q.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
                 + "   order by c.startDateTime ");
-//        date.setFirstDayOfWeek(Calendar.MONDAY);
         getPeriod.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
                 date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
         Timestamp end = new Timestamp(tStart.getTime());
-//        end.setHours(23);
         end.setMinutes(end.getMinutes() + 29);
         end.setSeconds(59);
         end.setNanos(999999);

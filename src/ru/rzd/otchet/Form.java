@@ -1,11 +1,15 @@
 package ru.rzd.otchet;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -130,8 +134,9 @@ public class Form extends javax.swing.JFrame {
             Calendar date = dateChooserCombo1.getSelectedDate();
             List<Period> report = logic.getReportByDay(date);
             Workbook wb = logic.createPeriodInSpravka(date, report);
-            selectSaveFile("FileName","xls");
-            FileOutputStream fos = new FileOutputStream("test.xls");
+            String fileName = logic.getFileName(Logic.ITOG_SUTOK, date);
+            String folder = selectSaveFile();
+            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls");
             wb.write(fos);
             wb.close();
             fos.close();
@@ -151,23 +156,36 @@ public class Form extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        //</editor-fold>
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new Form().setVisible(true);
+        if (args.length == 0) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+                Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
             }
-        });
+            /* Create and display the form */
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                public void run() {
+                    new Form().setVisible(true);
+                }
+            });
+        } else if ("console".equals(args[0].toLowerCase())) {
+            System.out.println("CONSOLE start");
+
+            if (args.length == 1) {
+
+                try {
+                    int available = System.in.available();
+                    Scanner in = new Scanner(System.in);
+                    String dStart = in.nextLine();
+                    System.out.println("ARG1 " + dStart);
+                } catch (IOException ex) {
+                    Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+
+            }
+        }
+
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -179,20 +197,13 @@ public class Form extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem1;
     // End of variables declaration//GEN-END:variables
 
-    private void selectSaveFile(String fileName, String xls) {
+    private String selectSaveFile() {
         JFileChooser c = new JFileChooser();
-//        c.set
-      // Demonstrate "Save" dialog:
-      int rVal = c.showSaveDialog(this);
-//      if (rVal == JFileChooser.APPROVE_OPTION) {
-//        filename.setText(c.getSelectedFile().getName());
-//        dir.setText(c.getCurrentDirectory().toString());
-//      }
-//      if (rVal == JFileChooser.CANCEL_OPTION) {
-//        filename.setText("You pressed cancel");
-//        dir.setText("");
-//      }
-        
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        c.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int rVal = c.showSaveDialog(this);
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            return c.getSelectedFile().getAbsolutePath();
+        }
+        return "";
     }
 }
