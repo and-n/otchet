@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -129,16 +130,19 @@ public class Form extends javax.swing.JFrame {
             Calendar date = dateChooserCombo1.getSelectedDate();
             List<Period> report = logic.getReportByDay(date);
             Workbook wb = logic.createPeriodInSpravka(date, report);
+            selectSaveFile("FileName","xls");
             FileOutputStream fos = new FileOutputStream("test.xls");
             wb.write(fos);
             wb.close();
             fos.close();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Ошибка при запросе.");
+            JOptionPane.showMessageDialog(this, "Ошибка при запросе из базы.");
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
         } catch (FileNotFoundException ex) {
+            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
+            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -174,4 +178,21 @@ public class Form extends javax.swing.JFrame {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     // End of variables declaration//GEN-END:variables
+
+    private void selectSaveFile(String fileName, String xls) {
+        JFileChooser c = new JFileChooser();
+//        c.set
+      // Demonstrate "Save" dialog:
+      int rVal = c.showSaveDialog(this);
+//      if (rVal == JFileChooser.APPROVE_OPTION) {
+//        filename.setText(c.getSelectedFile().getName());
+//        dir.setText(c.getCurrentDirectory().toString());
+//      }
+//      if (rVal == JFileChooser.CANCEL_OPTION) {
+//        filename.setText("You pressed cancel");
+//        dir.setText("");
+//      }
+        
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
