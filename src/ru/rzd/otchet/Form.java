@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Scanner;
@@ -136,10 +134,12 @@ public class Form extends javax.swing.JFrame {
             Workbook wb = logic.createPeriodInSpravka(date, report);
             String fileName = logic.getFileName(Logic.ITOG_SUTOK, date);
             String folder = selectSaveFile();
-            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls");
-            wb.write(fos);
-            wb.close();
-            fos.close();
+            if (!folder.isEmpty()) {
+                FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls", false);
+                wb.write(fos);
+                wb.close();
+                fos.close();
+            }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Ошибка при запросе из базы.");
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);

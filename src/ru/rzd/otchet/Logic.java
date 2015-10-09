@@ -74,6 +74,7 @@ public class Logic {
             List<Future<Period>> flist = executor.invokeAll(taskList, REQUEST_TIMEOUT, TimeUnit.SECONDS);
             for (Future f : flist) {
                 Period p = (Period) f.get();
+                System.out.println("per " + p);
                 periods.add(p);
             }
         } catch (InterruptedException | ExecutionException ex) {
