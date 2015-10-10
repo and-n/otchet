@@ -67,9 +67,8 @@ public class DAOOtchet {
 
         PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime from ContactCallDetail c"
                 + " inner join ContactQueueDetail q ON c.sessionID = q.sessionID "
-                + " left join AgentConnectionDetail a ON a.sessionID =q.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
-                + "and c.applicationID=0"
-                + "   order by c.startDateTime ");
+                + " left join AgentConnectionDetail a ON q.sessionID =a.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
+                + "and c.applicationID=0");
         getPeriod.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
                 date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);

@@ -29,6 +29,11 @@ import ru.rzd.otchet.data.Period;
 public class Form extends javax.swing.JFrame {
 
     /**
+     * Проверка на запуск в консоли или графически
+     */
+    public static boolean ISCONSOLE = false;
+
+    /**
      * Creates new form Form
      */
     public Form() {
@@ -170,9 +175,8 @@ public class Form extends javax.swing.JFrame {
             });
         } else if ("console".equals(args[0].toLowerCase())) {
             System.out.println("CONSOLE start");
-
+            ISCONSOLE = true;
             if (args.length == 1) {
-
                 try {
                     int available = System.in.available();
                     Scanner in = new Scanner(System.in);

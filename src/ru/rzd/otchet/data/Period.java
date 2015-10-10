@@ -16,7 +16,7 @@ public class Period {
 
     public void addCall(boolean isLost, int outTime, int talkTime, int ansTime) {
         queueTime += outTime;
-        calls++;
+        ++calls;
         if (!isLost) {
             if ((ansTime + outTime) <= 20) {
                 answerIn20Sec++;
