@@ -7,6 +7,8 @@ package ru.rzd.otchet;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,6 +33,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import static ru.rzd.otchet.Form.ISCONSOLE;
 import ru.rzd.otchet.data.Period;
 import task.OtchetTask;
 
@@ -80,6 +83,7 @@ public class Logic {
         } catch (InterruptedException | ExecutionException ex) {
             Logger.getLogger(Logic.class.getName()).log(Level.SEVERE, null, ex);
         }
+        executor.shutdown();
         return periods;
     }
 
@@ -188,9 +192,28 @@ public class Logic {
         c8.setCellValue(bd3.floatValue());
     }
 
-    String getFileName(String ITOG_SUTOK, Calendar date) {
+    public String getFileName(String ITOG_SUTOK, Calendar date) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
         return ITOG_SUTOK + sdf.format(date.getTime());
+    }
+
+    public void createReport(Calendar date, Form f) throws SQLException, FileNotFoundException, IOException {
+        List<Period> report = getReportByDay(date);
+        Workbook wb = createPeriodInSpravka(date, report);
+        String fileName = getFileName(Logic.ITOG_SUTOK, date);
+        String folder = "";
+        if (ISCONSOLE) {
+            folder = "DaylyReports";
+            new File(folder).mkdir();
+        } else {
+            folder = f.selectSaveFile();
+        }
+        if (!folder.isEmpty()) {
+            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls", false);
+            wb.write(fos);
+            wb.close();
+            fos.close();
+        }
     }
 
 }

@@ -1,21 +1,19 @@
 package ru.rzd.otchet;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Scanner;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import org.apache.poi.ss.usermodel.Workbook;
-import ru.rzd.otchet.data.Period;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -37,11 +35,12 @@ public class Form extends javax.swing.JFrame {
      * Creates new form Form
      */
     public Form() {
-        this.logic = new Logic();
-        initComponents();
+        if (!ISCONSOLE) {
+            initComponents();
+        }
     }
 
-    private final Logic logic;
+    private static Logic logic = new Logic();
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -135,16 +134,7 @@ public class Form extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         try {
             Calendar date = dateChooserCombo1.getSelectedDate();
-            List<Period> report = logic.getReportByDay(date);
-            Workbook wb = logic.createPeriodInSpravka(date, report);
-            String fileName = logic.getFileName(Logic.ITOG_SUTOK, date);
-            String folder = selectSaveFile();
-            if (!folder.isEmpty()) {
-                FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls", false);
-                wb.write(fos);
-                wb.close();
-                fos.close();
-            }
+            logic.createReport(date, this);
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Ошибка при запросе из базы.");
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
@@ -172,26 +162,12 @@ public class Form extends javax.swing.JFrame {
                 public void run() {
                     new Form().setVisible(true);
                 }
-            });
-        } else if ("console".equals(args[0].toLowerCase())) {
-            System.out.println("CONSOLE start");
-            ISCONSOLE = true;
-            if (args.length == 1) {
-                try {
-                    int available = System.in.available();
-                    Scanner in = new Scanner(System.in);
-                    String dStart = in.nextLine();
-                    System.out.println("ARG1 " + dStart);
-                } catch (IOException ex) {
-                    Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            } else {
-
             }
+            );
+        } else if ("console".equals(args[0].toLowerCase())) {
+            runConsole(args);
         }
-
     }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private datechooser.beans.DateChooserCombo dateChooserCombo1;
     private javax.swing.JButton jButton1;
@@ -201,13 +177,56 @@ public class Form extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem1;
     // End of variables declaration//GEN-END:variables
 
-    private String selectSaveFile() {
+    public String selectSaveFile() {
         JFileChooser c = new JFileChooser();
         c.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int rVal = c.showSaveDialog(this);
         if (rVal == JFileChooser.APPROVE_OPTION) {
             return c.getSelectedFile().getAbsolutePath();
         }
-        return "";
+        if (rVal == JFileChooser.CANCEL_OPTION) {
+            return "";
+        }
+        return selectSaveFile();
+    }
+
+    private static void runConsole(String[] args) {
+        System.out.println("CONSOLE start");
+        ISCONSOLE = true;
+        if (args.length == 1) {
+            try {
+                logic.createReport(Calendar.getInstance(), null);
+            } catch (SQLException | IOException ex) {
+                Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else if (args.length == 3) {
+            DateFormat df1 = new SimpleDateFormat("dd.MM.yyyy");
+            DateFormat df2 = new SimpleDateFormat("dd-MM-yyyy");
+            Date start = null, end = null;
+            try {
+                start = df1.parse(args[1]);
+                end = df1.parse(args[2]);
+            } catch (ParseException ex) {
+                try {
+                    start = df2.parse(args[1]);
+                    end = df2.parse(args[2]);
+                } catch (ParseException ex1) {
+                    Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+            if (start != null && end != null) {
+                for (int d = start.getDate(); start.before(end) || start.equals(end); start.setDate(++d)) {
+                    Calendar c = Calendar.getInstance();
+                    c.setTime(start);
+                    try {
+                        logic.createReport(c, null);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
     }
 }

@@ -23,7 +23,6 @@ public class Period {
             }
             if (ansTime == 10 && talkTime == 0) {
                 calls--;
-                System.out.println(" cals --");
             }
             answerTime += ansTime;
             this.talkTime += talkTime;
