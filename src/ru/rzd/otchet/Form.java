@@ -215,7 +215,8 @@ public class Form extends javax.swing.JFrame {
                 }
             }
             if (start != null && end != null) {
-                for (int d = start.getDate(); start.before(end) || start.equals(end); start.setDate(++d)) {
+                for (int d = start.getDate(); start.before(end) || start.equals(end);
+                        start.setTime(start.getTime() + 86400000L)) {
                     Calendar c = Calendar.getInstance();
                     c.setTime(start);
                     try {
