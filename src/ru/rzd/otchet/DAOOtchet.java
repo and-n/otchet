@@ -24,6 +24,9 @@ public class DAOOtchet {
 
     private Connection connection;
 
+    private PreparedStatement getAgentStatePer30min;
+    private PreparedStatement getStartAgentState;
+
     public DAOOtchet() {
         if (connection == null) {
             connect();
@@ -44,6 +47,12 @@ public class DAOOtchet {
         try {
             connection = DriverManager.getConnection(connectionUrl1);
             simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
+            getAgentStatePer30min = connection.prepareCall("Select  eventType, eventDateTime, agentID from AgentStateDetail "
+                    + "where eventDateTime > ? and eventDateTime < ? and "
+                    + "(eventType=1 or eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
+            getStartAgentState = connection.prepareCall("Select agentID,  eventType from AgentStateDetail "
+                    + "where eventDateTime > ? and eventDateTime < ? and "
+                    + "(eventType=1 or eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
         } catch (SQLException ex) {
             Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
             int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);
@@ -84,12 +93,9 @@ public class DAOOtchet {
     }
 
     public ResultSet getStartAgentState(Calendar date) throws SQLException {
-        PreparedStatement getStartAgentState = connection.prepareCall("Select agentID,  evenType from AgentStateDetail "
-                + "where eventDateTime > ? and eventDateTime < ? and "
-                + "(eventType=1 or eventType=2 or eventType=3 or eventType=7)");
         getStartAgentState.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
-                date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
+                19, 0, 0, 1);
         tStart.setTime(tStart.getTime() - 86400000L);
         Timestamp end = new Timestamp(tStart.getTime());
         end.setHours(23);
@@ -98,22 +104,20 @@ public class DAOOtchet {
         end.setNanos(999999);
         getStartAgentState.setTimestamp(1, tStart);
         getStartAgentState.setTimestamp(2, end);
-        System.out.println("Date " + tStart + "  END " + end);
+//        System.out.println("DateStart " + tStart + "  END " + end);
         ResultSet res = getStartAgentState.executeQuery();
         return res;
     }
 
     public ResultSet getAgentStatePer30min(Calendar date) throws SQLException {
-        PreparedStatement getAgentStatePer30min = connection.prepareCall("Select evenType, eventDateTime from AgentStateDetail "
-                + "where eventDateTime > ? and eventDateTime < ? and "
-                + "(eventType=1 or eventType=2 or eventType=3 or eventType=7)");
+
         getAgentStatePer30min.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
                 date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
         Timestamp end = new Timestamp(tStart.getTime() + 1800000);
         getAgentStatePer30min.setTimestamp(1, tStart);
         getAgentStatePer30min.setTimestamp(2, end);
-        System.out.println("Date " + tStart + "  END " + end);
+//        System.out.println("DateAgentState " + tStart + "  END " + end);
         ResultSet res = getAgentStatePer30min.executeQuery();
         return res;
     }

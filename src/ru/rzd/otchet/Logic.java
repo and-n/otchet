@@ -7,16 +7,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -103,7 +108,7 @@ public class Logic {
         if (f.exists()) {
             try {
                 wb = new HSSFWorkbook(new FileInputStream(f));
-                Sheet sheet = wb.getSheetAt(0);
+                Sheet sheet = wb.getSheetAt(1);
                 for (int i = 13; i < 61; i++) {
                     Row row = sheet.getRow(i);
                     addPeriodRow(row, periodList.get(i - 13), date, stats.get(i - 13));
@@ -166,13 +171,12 @@ public class Logic {
         addPeriodRow(row, period, date);
         int ansCalls = period.getCalls() - period.getLostCalls();
         Cell c13 = row.getCell(13);
-        //BigDecimal db13 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
         c13.setCellValue(stat.getAgentPer30min().doubleValue());
         Cell c14 = row.getCell(14);
         c14.setCellValue(stat.getAgentPer30min().doubleValue());
 
         Cell c15 = row.getCell(15);
-        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : stat.getAgentPer30min().divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
+        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(stat.getAgentPer30min(), 3, RoundingMode.HALF_EVEN);
         c15.setCellValue(db15.doubleValue());
     }
 
@@ -218,7 +222,7 @@ public class Logic {
 
     public void createReport(Calendar date, Form f) throws SQLException, FileNotFoundException, IOException {
         List<Period> report = getReportByDay(date);
-        List<Statist30min> stats = getStatsByDay(date);
+        List<Statist30min> stats = getStatsByDay(date, null);
         Workbook wb = createPeriodInSpravka(date, report, stats);
         String fileName = getFileName(Logic.ITOG_SUTOK, date);
         String folder = "";
@@ -236,36 +240,86 @@ public class Logic {
         }
     }
 
-    private List<Statist30min> getStatsByDay(Calendar date) throws SQLException {
+    private List<Statist30min> getStatsByDay(Calendar date, Map<Integer, AgentState> statesMap) throws SQLException {
         List<Statist30min> stats = new ArrayList<>();
         if (spravka == null) {
             spravka = new DAOOtchet();
         }
-        int start = getStartStats(date);
-        
-        
-        
+        if (statesMap == null) {
+            statesMap = getStartStats(date);
+        }
+
+        date.set(Calendar.HOUR_OF_DAY, 0);
+        date.set(Calendar.MINUTE, 0);
+        date.set(Calendar.SECOND, 0);
+        date.set(Calendar.MILLISECOND, 0);
+        Calendar endOfPeriod = Calendar.getInstance();
+        for (int i = 0; i < 48; i++) {
+            endOfPeriod.setTimeInMillis(date.getTimeInMillis() + 1800000L);
+            ResultSet rs = spravka.getAgentStatePer30min(date);
+            while (rs.next()) {
+                AgentState type = AgentState.values()[rs.getInt(1)];
+                Integer id = new Integer(rs.getInt(3));
+
+                Statist30min sm = new Statist30min(getWorked(statesMap));
+                Timestamp time = rs.getTimestamp(2);
+                if (type.equals(AgentState.LogIn)) {
+                    sm.addWorkAgent();
+                    sm.addWorkTime(date.getTimeInMillis() - time.getTime());
+                    statesMap.put(id, type);
+                    System.out.println("1111 " + date.getTimeInMillis() + "   " + time.getTime());
+                } else if (type.equals(AgentState.LogOut)) {
+                    sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
+                    statesMap.remove(id);
+                } else if (type.equals(AgentState.Ready)) {
+                    if (statesMap.get(id).equals(AgentState.NotReady)) {
+                        sm.addWorkTime(endOfPeriod.getTimeInMillis() - time.getTime());
+                    }
+                    statesMap.put(id, type);
+                } else if (type.equals(AgentState.NotReady)) {
+//                    sm.removeWorkAgent();
+                    sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
+                    statesMap.put(id, type);
+                }
+                stats.add(sm);
+                // removeLogOuts(statesMap);
+            }
+            date.setTimeInMillis(date.getTimeInMillis() + 1800000L);
+        }
+
         return stats;
     }
 
-    private int getStartStats(Calendar date) throws SQLException {
-        int startState = 0;
+    // работает
+    private Map<Integer, AgentState> getStartStats(Calendar date) throws SQLException {
         ResultSet res = spravka.getStartAgentState(date);
         Map<Integer, AgentState> states = new HashMap<>();
         while (res.next()) {
             Integer key = new Integer(res.getInt(1));
             int as = res.getInt(2);
-            states.put(key, AgentState.values()[as]);
-        }
-        for (Integer i : states.keySet()) {
-            AgentState as = states.get(i);
-            if (as.equals(AgentState.LogIn) || as.equals(AgentState.Ready)) {
-                startState++;
-            } else {
-                startState--;
+            if (as == AgentState.LogIn.ordinal() || as == AgentState.Ready.ordinal()
+                    || states.containsKey(key)) {
+                states.put(key, AgentState.values()[as]);
             }
         }
-        return startState;
+        Set<Integer> s = new HashSet<Integer>(states.keySet());
+        for (Integer i : s) {
+            AgentState as = states.get(i);
+            if (as.equals(AgentState.LogOut)) {
+                states.remove(i);
+            }
+        }
+        return states;
+    }
+
+    private int getWorked(Map<Integer, AgentState> statesMap) {
+        int l = 0;
+        for (Integer i : statesMap.keySet()) {
+            if (!statesMap.get(i).equals(AgentState.NotReady)) {
+                ++l;
+            }
+        }
+        return l;
     }
 
 }
