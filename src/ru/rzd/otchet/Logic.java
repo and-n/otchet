@@ -7,13 +7,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -29,7 +32,9 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import static ru.rzd.otchet.Form.ISCONSOLE;
+import ru.rzd.otchet.data.AgentState;
 import ru.rzd.otchet.data.Period;
+import ru.rzd.otchet.data.Statist30min;
 import task.OtchetTask;
 
 /**
@@ -44,6 +49,7 @@ public class Logic {
     public static final int REQUEST_TIMEOUT = 25;
 
     public static final String ITOG_SUTOK = "Справка по итогам суток ";
+    private DAOOtchet spravka;
 
     /**
      * Запрос из базы данных за сутки с разбивкой по пол часа.
@@ -53,12 +59,14 @@ public class Logic {
      * @throws SQLException
      */
     public List<Period> getReportByDay(Calendar calendar) throws SQLException {
-        DAOOtchet spravka = new DAOOtchet();
+        if (spravka == null) {
+            spravka = new DAOOtchet();
+        }
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 001);
-        ExecutorService executor = Executors.newFixedThreadPool(5);
+        ExecutorService executor = Executors.newFixedThreadPool(4);
         Collection<Callable<Period>> taskList = new ArrayList<>();
         for (int i = 0; i < 48; i++) {
             Calendar newCal = Calendar.getInstance();
@@ -89,7 +97,7 @@ public class Logic {
      * @param periodList Лист получасовок.
      * @return
      */
-    public Workbook createPeriodInSpravka(Calendar date, List<Period> periodList) {
+    public Workbook createPeriodInSpravka(Calendar date, List<Period> periodList, List<Statist30min> stats) {
         Workbook wb = null;
         File f = new File("folder" + File.separator + "ШАБЛОН.xls");
         if (f.exists()) {
@@ -98,7 +106,7 @@ public class Logic {
                 Sheet sheet = wb.getSheetAt(0);
                 for (int i = 13; i < 61; i++) {
                     Row row = sheet.getRow(i);
-                    addPeriodRow(row, periodList.get(i - 13), date);
+                    addPeriodRow(row, periodList.get(i - 13), date, stats.get(i - 13));
                 }
                 createHead(date, periodList, sheet);
             } catch (IOException ex) {
@@ -154,6 +162,20 @@ public class Logic {
         c12.setCellValue(db12.doubleValue());
     }
 
+    private void addPeriodRow(Row row, Period period, Calendar date, Statist30min stat) {
+        addPeriodRow(row, period, date);
+        int ansCalls = period.getCalls() - period.getLostCalls();
+        Cell c13 = row.getCell(13);
+        //BigDecimal db13 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
+        c13.setCellValue(stat.getAgentPer30min().doubleValue());
+        Cell c14 = row.getCell(14);
+        c14.setCellValue(stat.getAgentPer30min().doubleValue());
+
+        Cell c15 = row.getCell(15);
+        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : stat.getAgentPer30min().divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
+        c15.setCellValue(db15.doubleValue());
+    }
+
     private void createHead(Calendar date, List<Period> periodList, Sheet sheet) {
         Cell c1 = sheet.getRow(0).getCell(2);
         c1.setCellValue(date);
@@ -196,7 +218,8 @@ public class Logic {
 
     public void createReport(Calendar date, Form f) throws SQLException, FileNotFoundException, IOException {
         List<Period> report = getReportByDay(date);
-        Workbook wb = createPeriodInSpravka(date, report);
+        List<Statist30min> stats = getStatsByDay(date);
+        Workbook wb = createPeriodInSpravka(date, report, stats);
         String fileName = getFileName(Logic.ITOG_SUTOK, date);
         String folder = "";
         if (ISCONSOLE) {
@@ -211,6 +234,38 @@ public class Logic {
             wb.close();
             fos.close();
         }
+    }
+
+    private List<Statist30min> getStatsByDay(Calendar date) throws SQLException {
+        List<Statist30min> stats = new ArrayList<>();
+        if (spravka == null) {
+            spravka = new DAOOtchet();
+        }
+        int start = getStartStats(date);
+        
+        
+        
+        return stats;
+    }
+
+    private int getStartStats(Calendar date) throws SQLException {
+        int startState = 0;
+        ResultSet res = spravka.getStartAgentState(date);
+        Map<Integer, AgentState> states = new HashMap<>();
+        while (res.next()) {
+            Integer key = new Integer(res.getInt(1));
+            int as = res.getInt(2);
+            states.put(key, AgentState.values()[as]);
+        }
+        for (Integer i : states.keySet()) {
+            AgentState as = states.get(i);
+            if (as.equals(AgentState.LogIn) || as.equals(AgentState.Ready)) {
+                startState++;
+            } else {
+                startState--;
+            }
+        }
+        return startState;
     }
 
 }

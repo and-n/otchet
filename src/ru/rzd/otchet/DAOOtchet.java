@@ -83,4 +83,39 @@ public class DAOOtchet {
         return res;
     }
 
+    public ResultSet getStartAgentState(Calendar date) throws SQLException {
+        PreparedStatement getStartAgentState = connection.prepareCall("Select agentID,  evenType from AgentStateDetail "
+                + "where eventDateTime > ? and eventDateTime < ? and "
+                + "(eventType=1 or eventType=2 or eventType=3 or eventType=7)");
+        getStartAgentState.clearParameters();
+        Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
+                date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
+        tStart.setTime(tStart.getTime() - 86400000L);
+        Timestamp end = new Timestamp(tStart.getTime());
+        end.setHours(23);
+        end.setMinutes(59);
+        end.setSeconds(59);
+        end.setNanos(999999);
+        getStartAgentState.setTimestamp(1, tStart);
+        getStartAgentState.setTimestamp(2, end);
+        System.out.println("Date " + tStart + "  END " + end);
+        ResultSet res = getStartAgentState.executeQuery();
+        return res;
+    }
+
+    public ResultSet getAgentStatePer30min(Calendar date) throws SQLException {
+        PreparedStatement getAgentStatePer30min = connection.prepareCall("Select evenType, eventDateTime from AgentStateDetail "
+                + "where eventDateTime > ? and eventDateTime < ? and "
+                + "(eventType=1 or eventType=2 or eventType=3 or eventType=7)");
+        getAgentStatePer30min.clearParameters();
+        Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
+                date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
+        Timestamp end = new Timestamp(tStart.getTime() + 1800000);
+        getAgentStatePer30min.setTimestamp(1, tStart);
+        getAgentStatePer30min.setTimestamp(2, end);
+        System.out.println("Date " + tStart + "  END " + end);
+        ResultSet res = getAgentStatePer30min.executeQuery();
+        return res;
+    }
+
 }
