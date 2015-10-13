@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ru.rzd.otchet;
 
 import java.io.File;
@@ -97,7 +92,6 @@ public class Logic {
     public Workbook createPeriodInSpravka(Calendar date, List<Period> periodList) {
         Workbook wb = null;
         File f = new File("folder" + File.separator + "ШАБЛОН.xls");
-
         if (f.exists()) {
             try {
                 wb = new HSSFWorkbook(new FileInputStream(f));
@@ -109,6 +103,9 @@ public class Logic {
                 createHead(date, periodList, sheet);
             } catch (IOException ex) {
                 Logger.getLogger(Logic.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (NullPointerException ex) {
+                JOptionPane.showMessageDialog(null, "Неверный файл шаблона!!!");
+                System.exit(1);
             }
             return wb;
         } else {
@@ -116,9 +113,9 @@ public class Logic {
                     + "Файл \"ШАБЛОН.xls\" должен лежать в папке folder");
             System.exit(1);
         }
-
         return wb;
     }
+
     private final DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
     private final String[] dateNames = {"Воскресенье", "Понедельник", "Вторник",
         "Среда", "Четверг", "Пятница", "Суббота",};
