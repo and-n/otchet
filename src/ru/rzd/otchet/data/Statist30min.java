@@ -2,8 +2,6 @@ package ru.rzd.otchet.data;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -21,7 +19,11 @@ public class Statist30min {
     }
 
     public void addWorkAgent() {
-        startState++;
+        ++startState;
+    }
+
+    public int getWorkAgent() {
+        return startState;
     }
 
     public void addWorkTime(long time) {
@@ -36,6 +38,7 @@ public class Statist30min {
         BigDecimal mh = new BigDecimal(getAllWorkTime())
                 .divide(new BigDecimal(1000), 1, RoundingMode.HALF_EVEN)
                 .divide(new BigDecimal(1800), 3, RoundingMode.HALF_EVEN);
+        System.out.println("AP " + getAllWorkTime() + "   " + getWorkAgent());
         return mh;
     }
 

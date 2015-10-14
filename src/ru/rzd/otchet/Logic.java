@@ -7,10 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -169,14 +167,15 @@ public class Logic {
 
     private void addPeriodRow(Row row, Period period, Calendar date, Statist30min stat) {
         addPeriodRow(row, period, date);
+        BigDecimal ap = stat.getAgentPer30min();
         int ansCalls = period.getCalls() - period.getLostCalls();
         Cell c13 = row.getCell(13);
-        c13.setCellValue(stat.getAgentPer30min().doubleValue());
+        c13.setCellValue(ap.doubleValue());
         Cell c14 = row.getCell(14);
-        c14.setCellValue(stat.getAgentPer30min().doubleValue());
+        c14.setCellValue(ap.doubleValue());
 
         Cell c15 = row.getCell(15);
-        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(stat.getAgentPer30min(), 3, RoundingMode.HALF_EVEN);
+        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
         c15.setCellValue(db15.doubleValue());
     }
 
@@ -240,7 +239,9 @@ public class Logic {
         }
     }
 
-    private List<Statist30min> getStatsByDay(Calendar date, Map<Integer, AgentState> statesMap) throws SQLException {
+    private List<Statist30min> getStatsByDay(Calendar cal, Map<Integer, AgentState> statesMap) throws SQLException {
+        Calendar date = Calendar.getInstance();
+        date.setTimeInMillis(cal.getTimeInMillis());
         List<Statist30min> stats = new ArrayList<>();
         if (spravka == null) {
             spravka = new DAOOtchet();
@@ -257,22 +258,24 @@ public class Logic {
         for (int i = 0; i < 48; i++) {
             endOfPeriod.setTimeInMillis(date.getTimeInMillis() + 1800000L);
             ResultSet rs = spravka.getAgentStatePer30min(date);
+            int worked = getWorked(statesMap);
+            Statist30min sm = new Statist30min(worked);
             while (rs.next()) {
                 AgentState type = AgentState.values()[rs.getInt(1)];
                 Integer id = new Integer(rs.getInt(3));
-
-                Statist30min sm = new Statist30min(getWorked(statesMap));
                 Timestamp time = rs.getTimestamp(2);
                 if (type.equals(AgentState.LogIn)) {
                     sm.addWorkAgent();
                     sm.addWorkTime(date.getTimeInMillis() - time.getTime());
                     statesMap.put(id, type);
-                    System.out.println("1111 " + date.getTimeInMillis() + "   " + time.getTime());
                 } else if (type.equals(AgentState.LogOut)) {
                     sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
                     statesMap.remove(id);
                 } else if (type.equals(AgentState.Ready)) {
                     if (statesMap.get(id).equals(AgentState.NotReady)) {
+                        if (sm.getWorkAgent() == worked) {
+                            sm.addWorkAgent();
+                        }
                         sm.addWorkTime(endOfPeriod.getTimeInMillis() - time.getTime());
                     }
                     statesMap.put(id, type);
@@ -281,9 +284,9 @@ public class Logic {
                     sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
                     statesMap.put(id, type);
                 }
-                stats.add(sm);
                 // removeLogOuts(statesMap);
             }
+            stats.add(sm);
             date.setTimeInMillis(date.getTimeInMillis() + 1800000L);
         }
 
@@ -319,6 +322,7 @@ public class Logic {
                 ++l;
             }
         }
+        System.out.println("WORKED " + l);
         return l;
     }
 
