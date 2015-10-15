@@ -49,10 +49,10 @@ public class DAOOtchet {
             simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
             getAgentStatePer30min = connection.prepareCall("Select  eventType, eventDateTime, agentID from AgentStateDetail "
                     + "where eventDateTime > ? and eventDateTime < ? and "
-                    + "(eventType=1 or eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
+                    + "(eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
             getStartAgentState = connection.prepareCall("Select agentID,  eventType from AgentStateDetail "
                     + "where eventDateTime > ? and eventDateTime < ? and "
-                    + "(eventType=1 or eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
+                    + "(eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
         } catch (SQLException ex) {
             Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
             int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);

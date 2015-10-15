@@ -37,7 +37,7 @@ public class Statist30min {
     public BigDecimal getAgentPer30min() {
         BigDecimal mh = new BigDecimal(getAllWorkTime())
                 .divide(new BigDecimal(1000), 1, RoundingMode.HALF_EVEN)
-                .divide(new BigDecimal(1800), 3, RoundingMode.HALF_EVEN);
+                .divide(new BigDecimal(3600), 3, RoundingMode.HALF_EVEN);
         System.out.println("AP " + getAllWorkTime() + "   " + getWorkAgent());
         return mh;
     }

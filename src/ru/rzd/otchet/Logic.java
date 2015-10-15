@@ -175,7 +175,8 @@ public class Logic {
         c14.setCellValue(ap.doubleValue());
 
         Cell c15 = row.getCell(15);
-        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
+        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN)
+                .divide(new BigDecimal(2));
         c15.setCellValue(db15.doubleValue());
     }
 
@@ -265,17 +266,16 @@ public class Logic {
                 Integer id = new Integer(rs.getInt(3));
                 Timestamp time = rs.getTimestamp(2);
                 if (type.equals(AgentState.LogIn)) {
-                    sm.addWorkAgent();
-                    sm.addWorkTime(date.getTimeInMillis() - time.getTime());
+//                    sm.addWorkAgent();
+//                    sm.addWorkTime(date.getTimeInMillis() - time.getTime());
                     statesMap.put(id, type);
                 } else if (type.equals(AgentState.LogOut)) {
-                    sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
+                    if (statesMap.get(id) != null && statesMap.get(id).equals(AgentState.Ready)) {
+                        sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
+                    }
                     statesMap.remove(id);
                 } else if (type.equals(AgentState.Ready)) {
-                    if (statesMap.get(id).equals(AgentState.NotReady)) {
-                        if (sm.getWorkAgent() == worked) {
-                            sm.addWorkAgent();
-                        }
+                    if (statesMap.get(id) == null || !statesMap.get(id).equals(AgentState.Ready)) {
                         sm.addWorkTime(endOfPeriod.getTimeInMillis() - time.getTime());
                     }
                     statesMap.put(id, type);
@@ -318,7 +318,7 @@ public class Logic {
     private int getWorked(Map<Integer, AgentState> statesMap) {
         int l = 0;
         for (Integer i : statesMap.keySet()) {
-            if (!statesMap.get(i).equals(AgentState.NotReady)) {
+            if (statesMap.get(i).equals(AgentState.Ready)) {
                 ++l;
             }
         }
