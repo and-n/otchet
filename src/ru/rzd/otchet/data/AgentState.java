@@ -1,12 +1,13 @@
 package ru.rzd.otchet.data;
 
 /**
- * Состояние 
+ * Состояние оператора.
+ *
  * @author ATonevitskiy
  */
 public enum AgentState {
 
-    NoName,
+    WrongCode,
     LogIn,
     NotReady,
     Ready,
@@ -14,5 +15,12 @@ public enum AgentState {
     Talking,
     Work,
     LogOut;
+
+    public AgentState getByCode(int code) {
+        if (code > 0 && code < AgentState.values().length) {
+            return AgentState.values()[code];
+        }
+        return WrongCode;
+    }
 
 }
