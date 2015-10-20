@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ru.rzd.otchet;
+package ru.rzd.otchet.data;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -110,7 +110,6 @@ public class DAOOtchet {
     }
 
     public ResultSet getAgentStatePer30min(Calendar date) throws SQLException {
-
         getAgentStatePer30min.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
                 date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);

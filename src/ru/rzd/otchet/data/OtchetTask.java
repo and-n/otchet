@@ -3,12 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package task;
+package ru.rzd.otchet.data;
 
 import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.concurrent.Callable;
-import ru.rzd.otchet.DAOOtchet;
 import ru.rzd.otchet.data.Period;
 
 /**

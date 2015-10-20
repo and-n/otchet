@@ -1,4 +1,4 @@
-package ru.rzd.otchet;
+package ru.rzd.otchet.data;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,11 +34,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import ru.rzd.otchet.Form;
 import static ru.rzd.otchet.Form.ISCONSOLE;
-import ru.rzd.otchet.data.AgentState;
-import ru.rzd.otchet.data.Period;
-import ru.rzd.otchet.data.Statist30min;
-import task.OtchetTask;
 
 /**
  *
@@ -71,16 +68,18 @@ public class Logic {
         calendar.set(Calendar.MILLISECOND, 001);
         ExecutorService executor = Executors.newFixedThreadPool(4);
         Collection<Callable<Period>> taskList = new ArrayList<>();
+        List<Future<Period>> flist = new ArrayList<>();
         for (int i = 0; i < 48; i++) {
             Calendar newCal = Calendar.getInstance();
             newCal.setTimeInMillis(
                     calendar.getTimeInMillis() + (i * 1800000));
             OtchetTask task = new OtchetTask(spravka, newCal);
             taskList.add(task);
+            flist.add(executor.submit(task));
         }
         List<Period> periods = new ArrayList<>();
         try {
-            List<Future<Period>> flist = executor.invokeAll(taskList, REQUEST_TIMEOUT, TimeUnit.SECONDS);
+//            List<Future<Period>> flist = executor.invokeAll(taskList, REQUEST_TIMEOUT, TimeUnit.SECONDS);
             for (Future f : flist) {
                 Period p = (Period) f.get();
                 System.out.println("per " + p);

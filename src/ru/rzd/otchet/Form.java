@@ -1,5 +1,6 @@
 package ru.rzd.otchet;
 
+import ru.rzd.otchet.data.Logic;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -40,8 +41,6 @@ public class Form extends javax.swing.JFrame {
         }
     }
 
-    private static Logic logic = new Logic();
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -64,6 +63,9 @@ public class Form extends javax.swing.JFrame {
         setFocusCycleRoot(false);
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                Closed(evt);
+            }
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
             }
@@ -127,11 +129,13 @@ public class Form extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_formWindowOpened
 
+
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         System.exit(1);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        Logic logic = new Logic();
         try {
             Calendar date = dateChooserCombo1.getSelectedDate();
             logic.createReport(date, this);
@@ -146,6 +150,10 @@ public class Form extends javax.swing.JFrame {
             Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void Closed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_Closed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_Closed
 
     /**
      * @param args the command line arguments
@@ -193,6 +201,7 @@ public class Form extends javax.swing.JFrame {
     private static void runConsole(String[] args) {
         System.out.println("CONSOLE start");
         ISCONSOLE = true;
+        Logic logic = new Logic();
         if (args.length == 1) {
             try {
                 logic.createReport(Calendar.getInstance(), null);
@@ -221,9 +230,7 @@ public class Form extends javax.swing.JFrame {
                     c.setTime(start);
                     try {
                         logic.createReport(c, null);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
+                    } catch (SQLException | IOException ex) {
                         Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
