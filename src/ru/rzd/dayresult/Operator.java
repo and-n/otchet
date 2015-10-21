@@ -67,11 +67,97 @@ public class Operator {
     }
 
     private void setTime(long time) {
-        if (lastState.equals(AgentState.LogIn)) {
-
+        if (lastState.equals(AgentState.LogIn) || lastState.equals(AgentState.NotReady)) {
+            unpaidTime += time;
         } else if (lastState.equals(AgentState.Ready)) {
-
+            waitTime += time;
         }
+    }
+
+    public void addTalkTime(int time) {
+        talkTime += time;
+        maxTalkTime = Math.max(maxTalkTime, time);
+    }
+
+    public void addHoldTime(int time) {
+        holdTime += time;
+    }
+
+    public void addWorkTime(int time) {
+        workTime += time;
+    }
+
+    public void addRingTime(int time) {
+        ringTime += time;
+    }
+
+    public void addCall(boolean isMissed) {
+        allCals++;
+        missCalls = isMissed ? missCalls++ : missCalls;
+    }
+
+    public void addChangedCall() {
+        changeCalls++;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public long getStaffTime() {
+        return staffTime;
+    }
+
+    public long getTalkTime() {
+        return talkTime;
+    }
+
+    public long getMaxTalkTime() {
+        return maxTalkTime;
+    }
+
+    public long getWaitTime() {
+        return waitTime;
+    }
+
+    public long getChangeCalls() {
+        return changeCalls;
+    }
+
+    public long getWorkTime() {
+        return workTime;
+    }
+
+    public long getMissCalls() {
+        return missCalls;
+    }
+
+    public long getAllCals() {
+        return allCals;
+    }
+
+    public long getHoldTime() {
+        return holdTime;
+    }
+
+    public long getRingTime() {
+        return ringTime;
+    }
+
+    public long getUnpaidTime() {
+        return unpaidTime;
+    }
+
+    public AgentState getLastState() {
+        return lastState;
+    }
+
+    public Timestamp getLastTime() {
+        return lastTime;
+    }
+
+    public Timestamp getLoginTime() {
+        return loginTime;
     }
 
 }

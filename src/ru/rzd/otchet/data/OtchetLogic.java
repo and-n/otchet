@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -41,7 +40,7 @@ import static ru.rzd.otchet.Form.ISCONSOLE;
  *
  * @author Andrey
  */
-public class Logic {
+public class OtchetLogic {
 
     /**
      * Таймаут запроса данных из базы за пол часа.
@@ -86,7 +85,7 @@ public class Logic {
                 periods.add(p);
             }
         } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(Logic.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OtchetLogic.class.getName()).log(Level.SEVERE, null, ex);
         }
         executor.shutdown();
         return periods;
@@ -112,7 +111,7 @@ public class Logic {
                 }
                 createHead(date, periodList, sheet);
             } catch (IOException ex) {
-                Logger.getLogger(Logic.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(OtchetLogic.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NullPointerException ex) {
                 JOptionPane.showMessageDialog(null, "Неверный файл шаблона!!!");
                 System.exit(1);
@@ -223,7 +222,7 @@ public class Logic {
         List<Period> report = getReportByDay(date);
         List<Statist30min> stats = getStatsByDay(date, null);
         Workbook wb = createPeriodInSpravka(date, report, stats);
-        String fileName = getFileName(Logic.ITOG_SUTOK, date);
+        String fileName = getFileName(OtchetLogic.ITOG_SUTOK, date);
         String folder = "";
         if (ISCONSOLE) {
             folder = "DaylyReports";

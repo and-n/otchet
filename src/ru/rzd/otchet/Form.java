@@ -1,6 +1,6 @@
 package ru.rzd.otchet;
 
-import ru.rzd.otchet.data.Logic;
+import ru.rzd.otchet.data.OtchetLogic;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -15,6 +15,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import ru.rzd.dayresult.DayResultLogic;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -52,6 +53,7 @@ public class Form extends javax.swing.JFrame {
 
         jButton1 = new javax.swing.JButton();
         dateChooserCombo1 = new datechooser.beans.DateChooserCombo();
+        jButton2 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -77,6 +79,14 @@ public class Form extends javax.swing.JFrame {
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
+            }
+        });
+
+        jButton2.setFont(new java.awt.Font("Times New Roman", 1, 24)); // NOI18N
+        jButton2.setText("Показатели работы диспетчеров");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
             }
         });
 
@@ -107,7 +117,9 @@ public class Form extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(47, Short.MAX_VALUE)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 392, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE))
                 .addGap(46, 46, 46))
         );
         layout.setVerticalGroup(
@@ -117,7 +129,9 @@ public class Form extends javax.swing.JFrame {
                 .addComponent(dateChooserCombo1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(119, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(48, Short.MAX_VALUE))
         );
 
         pack();
@@ -135,7 +149,7 @@ public class Form extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        Logic logic = new Logic();
+        OtchetLogic logic = new OtchetLogic();
         try {
             Calendar date = dateChooserCombo1.getSelectedDate();
             logic.createReport(date, this);
@@ -154,6 +168,23 @@ public class Form extends javax.swing.JFrame {
     private void Closed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_Closed
         // TODO add your handling code here:
     }//GEN-LAST:event_Closed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        DayResultLogic logic = new DayResultLogic();
+//        try {
+//            Calendar date = dateChooserCombo1.getSelectedDate();
+//            logic.createReport(date, this);
+//        } catch (SQLException ex) {
+//            JOptionPane.showMessageDialog(this, "Ошибка при запросе из базы.");
+//            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (FileNotFoundException ex) {
+//            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
+//            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IOException ex) {
+//            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
+//            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -179,6 +210,7 @@ public class Form extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private datechooser.beans.DateChooserCombo dateChooserCombo1;
     private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
@@ -201,7 +233,7 @@ public class Form extends javax.swing.JFrame {
     private static void runConsole(String[] args) {
         System.out.println("CONSOLE start");
         ISCONSOLE = true;
-        Logic logic = new Logic();
+        OtchetLogic logic = new OtchetLogic();
         if (args.length == 1) {
             try {
                 logic.createReport(Calendar.getInstance(), null);

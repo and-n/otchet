@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import ru.rzd.otchet.Form;
 
 /**
  *
@@ -54,14 +55,18 @@ public class DAOOtchet {
                     + "where eventDateTime > ? and eventDateTime < ? and "
                     + "(eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
         } catch (SQLException ex) {
-            Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
-            int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);
-            if (i == JOptionPane.YES_OPTION) {
-                connect();
+            if (!Form.ISCONSOLE) {
+                Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
+                int i = JOptionPane.showConfirmDialog(null, "Нет соединения с базой. Переподключиться?", "Database error", JOptionPane.YES_NO_OPTION);
+                if (i == JOptionPane.YES_OPTION) {
+                    connect();
+                } else {
+                    System.exit(1);
+                }
             } else {
-                System.exit(1);
+                System.out.println("Нет коннекта к базе! ");
+                connect();
             }
-
         }
     }
 
