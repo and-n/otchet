@@ -57,11 +57,11 @@ public class DAODayResult {
         }
     }
 
-    public int getID(String surname, String name) throws SQLException {
-        PreparedStatement getID = connection.prepareStatement("select resourceID from Resource where resourceName like ? "
+    public int getID(String surname, String initials) throws SQLException {
+        PreparedStatement getID = connection.prepareStatement("select resourceID from Resource where resourceName = ? "
                 + " and active=1");
         int id = -1;
-        getID.setString(1, name + " " + surname);
+        getID.setString(1, initials + " " + surname);
         ResultSet res = getID.executeQuery();
         if (res.next()) {
             id = res.getInt(1);

@@ -66,14 +66,12 @@ public class OtchetLogic {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 001);
         ExecutorService executor = Executors.newFixedThreadPool(4);
-        Collection<Callable<Period>> taskList = new ArrayList<>();
         List<Future<Period>> flist = new ArrayList<>();
         for (int i = 0; i < 48; i++) {
             Calendar newCal = Calendar.getInstance();
             newCal.setTimeInMillis(
                     calendar.getTimeInMillis() + (i * 1800000));
             OtchetTask task = new OtchetTask(spravka, newCal);
-            taskList.add(task);
             flist.add(executor.submit(task));
         }
         List<Period> periods = new ArrayList<>();

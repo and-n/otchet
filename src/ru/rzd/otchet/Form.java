@@ -65,9 +65,6 @@ public class Form extends javax.swing.JFrame {
         setFocusCycleRoot(false);
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                Closed(evt);
-            }
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
             }
@@ -154,37 +151,38 @@ public class Form extends javax.swing.JFrame {
             Calendar date = dateChooserCombo1.getSelectedDate();
             logic.createReport(date, this);
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Ошибка при запросе из базы.");
-            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+            showError(ex, "Ошибка при запросе из базы.", "Ошибка базы");
         } catch (FileNotFoundException ex) {
-            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
-            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+            showError(ex, "Не найден файл шаблона!", "Ошибка шаблона");
         } catch (IOException ex) {
-            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
-            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
+            showError(ex, "Невозможно сохранить файл!", "Ошибка сохранения");
+        } catch (Exception ex) {
+            showError(ex, ex.getMessage(), "Непредвиденная ошибка");
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void Closed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_Closed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_Closed
-
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         DayResultLogic logic = new DayResultLogic();
-//        try {
-//            Calendar date = dateChooserCombo1.getSelectedDate();
-//            logic.createReport(date, this);
-//        } catch (SQLException ex) {
-//            JOptionPane.showMessageDialog(this, "Ошибка при запросе из базы.");
-//            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (FileNotFoundException ex) {
-//            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
-//            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (IOException ex) {
-//            JOptionPane.showMessageDialog(rootPane, "Невозможно сохранить файл!", "Ошибка сохранения", JOptionPane.ERROR_MESSAGE);
-//            Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        try {
+            Calendar date = dateChooserCombo1.getSelectedDate();
+            logic.createReport(date);
+        } catch (SQLException ex) {
+            showError(ex, "Ошибка при запросе из базы.", "Ошибка базы");
+        } catch (FileNotFoundException ex) {
+            showError(ex, "Не найден файл шаблона!", "Ошибка шаблона");
+        } catch (IOException ex) {
+            showError(ex, "Невозможно сохранить файл!", "Ошибка сохранения");
+        } catch (Exception ex) {
+            showError(ex, ex.getMessage(), "Непредвиденная ошибка");
+        }
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void showError(Exception e, String message, String title) {
+        Logger.getLogger(Form.class.getName()).log(Level.SEVERE, null, e);
+        if (!ISCONSOLE) {
+            JOptionPane.showMessageDialog(rootPane, message, title, JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     /**
      * @param args the command line arguments

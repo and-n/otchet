@@ -18,13 +18,13 @@ public class Operator {
      * Имя отчество оператора.
      */
     String name;
-    int id;
-    long staffTime, talkTime, maxTalkTime, waitTime, changeCalls, workTime,
+    private int id;
+    private long staffTime, talkTime, maxTalkTime, waitTime, changeCalls, workTime,
             missCalls, allCals, holdTime, ringTime, unpaidTime;
 
     public Operator(String name, String surname) {
-        this.name = name;
-        this.surname = surname;
+        this.name = name.trim();
+        this.surname = surname.trim();
     }
 
     public String getSurname() {
@@ -98,6 +98,10 @@ public class Operator {
 
     public void addChangedCall() {
         changeCalls++;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getId() {

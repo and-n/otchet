@@ -8,7 +8,6 @@ package ru.rzd.otchet.data;
 import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.concurrent.Callable;
-import ru.rzd.otchet.data.Period;
 
 /**
  *
