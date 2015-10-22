@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ru.rzd.dayresult;
 
 import java.io.File;
@@ -19,6 +14,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import ru.rzd.otchet.Pair;
 
 /**
  *
@@ -36,18 +32,18 @@ public class DayResultLogic {
         if (sheet1 == null) {
             throw new Exception("Изменился шаблон - не попали в нужный лист.");
         }
-        List<String> fio = findFIO(sheet1);
+        List<Pair<Row, String>> fio = findFIO(sheet1);
         ExecutorService executor = Executors.newFixedThreadPool(4);
-        List<Future<Operator>> flist = new ArrayList<>();
-        for (String f : fio) {
-            String[] init = f.split("\\s+");
+        List<Future<Void>> flist = new ArrayList<>();
+        for (Pair<Row, String> p : fio) {
+            String[] init = p.getR().split("\\s+");
             if (init.length != 3) {
-                throw new Exception("ФИО не соответсвует ожиданию: " + f);
+                throw new Exception("ФИО не соответсвует ожиданию: " + p.getR());
             }
             String surname = init[0].toUpperCase().charAt(0) + init[0].toUpperCase().toLowerCase().substring(1);
-            Operator operator = new Operator(f.substring(surname.length()), surname);
+            Operator operator = new Operator(p.getR().substring(surname.length()), surname);
             DAODayResult dao = new DAODayResult();
-            DayResultTask dtast = new DayResultTask(operator, dao);
+            DayResultTask dtast = new DayResultTask(operator, dao, p.getL());
             flist.add(executor.submit(dtast));
 
         }
@@ -59,13 +55,13 @@ public class DayResultLogic {
 //        addOperatorToSheet(sheet1, operator);
     }
 
-    private List<String> findFIO(Sheet sheet1) {
-        List<String> res = new ArrayList<>();
+    private List<Pair<Row, String>> findFIO(Sheet sheet1) {
+        List<Pair<Row, String>> res = new ArrayList<>();
         Row r = sheet1.getRow(3);
         for (int i = 4; r != null; i++) {
             String fio = r.getCell(0).getStringCellValue().toUpperCase();
             if (!fio.startsWith("ИТОГО") && !fio.startsWith("ПЛОЩАДКА")) {
-                res.add(fio);
+                res.add(new Pair<Row, String>(r, fio));
             }
             r = sheet1.getRow(i);
         }
