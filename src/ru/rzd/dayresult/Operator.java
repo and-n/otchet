@@ -13,11 +13,11 @@ public class Operator {
     /**
      * Фамилия оператора.
      */
-    String surname;
+    private String surname;
     /**
      * Имя отчество оператора.
      */
-    String name;
+    private String name;
     private int id;
     private long staffTime, talkTime, maxTalkTime, waitTime, changeCalls, workTime,
             missCalls, allCals, holdTime, ringTime, unpaidTime;
@@ -47,23 +47,31 @@ public class Operator {
 
     public void addState(AgentState state, Timestamp time) {
         long t = lastTime != null ? time.getTime() - lastTime.getTime() : 0;
-        switch (state) {
-            case LogIn: {
-                if (lastState == null) {
-                    loginTime = time;
-                } else {
-                    System.out.println("WTF?");
+        if (loginTime != null || state.equals(AgentState.LogIn)) {
+            switch (state) {
+                case LogIn: {
+                    if (lastState == null) {
+                        loginTime = time;
+                    } else {
+                        System.out.println("WTF?");
+                        return;
+                    }
+                    break;
                 }
+                case LogOut: {
+                    System.out.println("LAST " + (loginTime != null || state.equals(AgentState.LogIn)));
+                    staffTime = time.getTime() - loginTime.getTime();
+                    setTime(t);
+                    break;
+                }
+                default:
+                    setTime(t);
+                    break;
             }
-            case LogOut: {
-                staffTime = time.getTime() - loginTime.getTime();
-                setTime(t);
-            }
-            default:
-                setTime(t);
+            lastTime = time;
+            lastState = state;
         }
-        lastTime = time;
-        lastState = state;
+
     }
 
     private void setTime(long time) {
@@ -162,6 +170,18 @@ public class Operator {
 
     public Timestamp getLoginTime() {
         return loginTime;
+    }
+
+    public void addTimes(int ring, int talk, int hold, int work) {
+        addRingTime(ring);
+        addTalkTime(talk);
+        addHoldTime(hold);
+        addWorkTime(work);
+        if (ring == 10 && talk == 0) {
+            addCall(true);
+        } else {
+            addCall(false);
+        }
     }
 
 }

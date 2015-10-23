@@ -3,7 +3,9 @@ package ru.rzd.dayresult;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -14,6 +16,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import ru.rzd.otchet.Form;
+import static ru.rzd.otchet.Form.ISCONSOLE;
 import ru.rzd.otchet.Pair;
 
 /**
@@ -22,7 +26,7 @@ import ru.rzd.otchet.Pair;
  */
 public class DayResultLogic {
 
-    public void createReport(Calendar date) throws FileNotFoundException, IOException, Exception {
+    public void createReport(Calendar date, Form f) throws FileNotFoundException, IOException, Exception {
         File sh = new File("folder" + File.separator + "ДИСПЕТЧЕРА.xlsx");
         if (!sh.exists()) {
             throw new FileNotFoundException("Не найден файл шаблона.");
@@ -43,16 +47,29 @@ public class DayResultLogic {
             String surname = init[0].toUpperCase().charAt(0) + init[0].toUpperCase().toLowerCase().substring(1);
             Operator operator = new Operator(p.getR().substring(surname.length()), surname);
             DAODayResult dao = new DAODayResult();
-            DayResultTask dtast = new DayResultTask(operator, dao, p.getL());
+            DayResultTask dtast = new DayResultTask(operator, dao, p.getL(), date);
             flist.add(executor.submit(dtast));
 
         }
-
-        for (Future f : flist) {
-            f.get();
+        for (Future future : flist) {
+            future.get();
         }
         executor.shutdown();
-//        addOperatorToSheet(sheet1, operator);
+
+        String fileName = getFileName("Показатели работы операторов ", date);
+        String folder = "";
+        if (ISCONSOLE) {
+            folder = "OperatorReports";
+            new File(folder).mkdir();
+        } else {
+            folder = f.selectSaveFile();
+        }
+        if (!folder.isEmpty()) {
+            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls", false);
+            wb.write(fos);
+            wb.close();
+            fos.close();
+        }
     }
 
     private List<Pair<Row, String>> findFIO(Sheet sheet1) {
@@ -66,6 +83,11 @@ public class DayResultLogic {
             r = sheet1.getRow(i);
         }
         return res;
+    }
+
+    private String getFileName(String day_report, Calendar date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
+        return day_report + sdf.format(date.getTime());
     }
 
 }

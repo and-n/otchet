@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -70,6 +72,38 @@ public class DAODayResult {
             id = -1;
         }
         return id;
+    }
+
+    public ResultSet getAgentStates(int id, Calendar date) throws SQLException {
+        PreparedStatement getAgentState = connection.prepareStatement("Select  eventType, eventDateTime from AgentStateDetail "
+                + "where eventDateTime > ? and eventDateTime < ? and "
+                + "agentID=? order by eventDateTime");
+        Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
+                19, 0, 0, 1);
+        Timestamp end = new Timestamp(tStart.getTime());
+        end.setHours(23);
+        end.setMinutes(59);
+        end.setSeconds(59);
+        end.setNanos(999999);
+
+        tStart.setTime(tStart.getTime() - 86400000L);
+
+        getAgentState.setTimestamp(1, tStart);
+        getAgentState.setTimestamp(2, end);
+        getAgentState.setInt(3, id);
+        return getAgentState.executeQuery();
+    }
+
+    public ResultSet getCallDetail(int id, Timestamp startTime) throws SQLException {
+        PreparedStatement getAgentState = connection.prepareStatement("Select  ringTime, talkTime, holdTime, workTime from AgentConnectionDetail "
+                + "where startDateTime > ? and startDateTime < ? and "
+                + "resourceID=?");
+        Timestamp end = new Timestamp(startTime.getTime() + 50400000L);
+
+        getAgentState.setTimestamp(1, startTime);
+        getAgentState.setTimestamp(2, end);
+        getAgentState.setInt(3, id);
+        return getAgentState.executeQuery();
     }
 
 }

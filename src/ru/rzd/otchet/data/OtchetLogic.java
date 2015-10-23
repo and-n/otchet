@@ -14,13 +14,11 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -211,7 +209,7 @@ public class OtchetLogic {
         c8.setCellValue(bd3.floatValue());
     }
 
-    public String getFileName(String ITOG_SUTOK, Calendar date) {
+    private String getFileName(String ITOG_SUTOK, Calendar date) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
         return ITOG_SUTOK + sdf.format(date.getTime());
     }
@@ -258,7 +256,7 @@ public class OtchetLogic {
             int worked = getWorked(statesMap);
             Statist30min sm = new Statist30min(worked);
             while (rs.next()) {
-                AgentState type = AgentState.values()[rs.getInt(1)];
+                AgentState type = AgentState.getByCode(rs.getInt(1));
                 Integer id = new Integer(rs.getInt(3));
                 Timestamp time = rs.getTimestamp(2);
                 if (type.equals(AgentState.LogIn)) {
@@ -298,7 +296,7 @@ public class OtchetLogic {
             int as = res.getInt(2);
             if (as == AgentState.LogIn.ordinal() || as == AgentState.Ready.ordinal()
                     || states.containsKey(key)) {
-                states.put(key, AgentState.values()[as]);
+                states.put(key, AgentState.getByCode(as));
             }
         }
         Set<Integer> s = new HashSet<Integer>(states.keySet());

@@ -165,7 +165,7 @@ public class Form extends javax.swing.JFrame {
         DayResultLogic logic = new DayResultLogic();
         try {
             Calendar date = dateChooserCombo1.getSelectedDate();
-            logic.createReport(date);
+            logic.createReport(date, this);
         } catch (SQLException ex) {
             showError(ex, "Ошибка при запросе из базы.", "Ошибка базы");
         } catch (FileNotFoundException ex) {
