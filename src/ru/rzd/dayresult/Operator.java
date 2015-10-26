@@ -1,5 +1,7 @@
 package ru.rzd.dayresult;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import ru.rzd.otchet.data.AgentState;
 
@@ -117,7 +119,8 @@ public class Operator {
     }
 
     public long getStaffTime() {
-        return staffTime;
+        BigDecimal st = new BigDecimal(staffTime).divide(new BigDecimal(1000), RoundingMode.HALF_EVEN);
+        return st.longValue();
     }
 
     public long getTalkTime() {
@@ -144,7 +147,7 @@ public class Operator {
         return missCalls;
     }
 
-    public long getAllCals() {
+    public long getAllCalls() {
         return allCals;
     }
 
@@ -157,7 +160,8 @@ public class Operator {
     }
 
     public long getUnpaidTime() {
-        return unpaidTime;
+        BigDecimal st = new BigDecimal(unpaidTime).divide(new BigDecimal(1000), RoundingMode.HALF_EVEN);
+        return st.longValue();
     }
 
     public AgentState getLastState() {
