@@ -15,12 +15,12 @@ public class Operator {
     /**
      * Фамилия оператора.
      */
-    private String surname;
+    private final String surname;
     /**
      * Имя отчество оператора.
      */
-    private String name;
-    private int id;
+    private final String name;
+//    private int id;
     private long staffTime, talkTime, maxTalkTime, waitTime, changeCalls, workTime,
             missCalls, allCals, holdTime, ringTime, unpaidTime;
 
@@ -52,17 +52,11 @@ public class Operator {
         if (loginTime != null || state.equals(AgentState.LogIn)) {
             switch (state) {
                 case LogIn: {
-                    if (lastState == null) {
-                        loginTime = time;
-                    } else {
-                        System.out.println("WTF?");
-                        return;
-                    }
+                    loginTime = time;
                     break;
                 }
                 case LogOut: {
-                    System.out.println("LAST " + (loginTime != null || state.equals(AgentState.LogIn)));
-                    staffTime = time.getTime() - loginTime.getTime();
+                    staffTime = staffTime + time.getTime() - loginTime.getTime();
                     setTime(t);
                     break;
                 }
@@ -77,7 +71,8 @@ public class Operator {
     }
 
     private void setTime(long time) {
-        if (lastState.equals(AgentState.LogIn) || lastState.equals(AgentState.NotReady)) {
+        if (lastState.equals(AgentState.LogIn) || lastState.equals(AgentState.NotReady)
+                || lastState.equals(AgentState.LogOut)) {
             unpaidTime += time;
         } else if (lastState.equals(AgentState.Ready)) {
             waitTime += time;
@@ -103,21 +98,22 @@ public class Operator {
 
     public void addCall(boolean isMissed) {
         allCals++;
-        missCalls = isMissed ? missCalls++ : missCalls;
+        if (isMissed) {
+            missCalls++;
+        }
     }
 
     public void addChangedCall() {
         changeCalls++;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return id;
-    }
-
+//    public void setId(int id) {
+//        this.id = id;
+//    }
+//
+//    public int getId() {
+//        return id;
+//    }
     public long getStaffTime() {
         BigDecimal st = new BigDecimal(staffTime).divide(new BigDecimal(1000), RoundingMode.HALF_EVEN);
         return st.longValue();
@@ -132,7 +128,8 @@ public class Operator {
     }
 
     public long getWaitTime() {
-        return waitTime;
+        BigDecimal st = new BigDecimal(waitTime).divide(new BigDecimal(1000), RoundingMode.HALF_EVEN);
+        return st.longValue();
     }
 
     public long getChangeCalls() {
@@ -181,7 +178,7 @@ public class Operator {
         addTalkTime(talk);
         addHoldTime(hold);
         addWorkTime(work);
-        if (ring == 10 && talk == 0) {
+        if (talk == 0) {
             addCall(true);
         } else {
             addCall(false);

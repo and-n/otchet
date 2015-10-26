@@ -68,7 +68,7 @@ public class DayResultLogic {
         if (!folder.isEmpty()) {
             FormulaEvaluator formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
             formulaEvaluator.evaluateAll();
-            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls", false);
+            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xlsx", false);
             wb.write(fos);
             wb.close();
             fos.close();

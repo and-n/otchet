@@ -31,22 +31,23 @@ public class DayResultTask implements Callable<Void> {
 
     @Override
     public Void call() throws Exception {
-        int id = dao.getID(operator.getSurname(), operator.getInitials());
-        operator.setId(id);
-
-        ResultSet rs = dao.getAgentStates(id, date);
+//        int id = dao.getID(operator.getSurname(), operator.getInitials());
+//        operator.setId(id);
+        String iname = operator.getInitials() + " " + operator.getSurname();
+        ResultSet rs = dao.getAgentStates(iname, date);
         while (rs.next()) {
             AgentState state = AgentState.getByCode(rs.getInt(1));
             Timestamp time = rs.getTimestamp(2);
             operator.addState(state, time);
         }
+        System.out.println("HI " + iname + " " + operator.getLoginTime());
         if (operator.getLoginTime() != null) {
-            rs = dao.getCallDetail(id, operator.getLoginTime());
-            while (rs.next()) {
-                int ring = rs.getInt(1);
-                int talk = rs.getInt(2);
-                int hold = rs.getInt(3);
-                int work = rs.getInt(4);
+            ResultSet rset = dao.getCallDetail(iname, operator.getLoginTime());
+            while (rset.next()) {
+                int ring = rset.getInt(1);
+                int talk = rset.getInt(2);
+                int hold = rset.getInt(3);
+                int work = rset.getInt(4);
                 operator.addTimes(ring, talk, hold, work);
             }
             addRows();
@@ -55,8 +56,9 @@ public class DayResultTask implements Callable<Void> {
     }
 
     private void addRows() {
-//        System.out.println("addrow " + operator.getSurname() + " " + operator.getTalkTime());
-        if (operator.getId() > 0 && row != null && operator.getAllCalls() > 0 && operator.getStaffTime() > 0) {
+        System.out.println("addrow " + operator.getSurname()
+                + " ca" + operator.getAllCalls() + operator.getStaffTime());
+        if (row != null && operator.getAllCalls() > 0 && operator.getStaffTime() > 0) {
             Cell cell;
             BigDecimal staffTime = new BigDecimal(operator.getStaffTime());
             BigDecimal allCalls = new BigDecimal(operator.getAllCalls());
@@ -76,7 +78,6 @@ public class DayResultTask implements Callable<Void> {
 
             // % UTZ
             cell = row.getCell(5);
-
             cell.setCellValue(new BigDecimal(operator.getStaffTime() - operator.getUnpaidTime())
                     .divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
 
@@ -85,13 +86,13 @@ public class DayResultTask implements Callable<Void> {
             cell.setCellValue(operator.getWorkTime() / operator.getStaffTime());
             // Ring Time (среднее время на 1 звонок), сек
             cell = row.getCell(7);
+            cell.setCellValue(operator.getHoldTime() / operator.getStaffTime());
+            // Ring Time (среднее время на 1 звонок), сек
+            cell = row.getCell(8);
             cell.setCellValue(operator.getRingTime() / operator.getAllCalls());
             // Состояние "недоступен для приема входящих звонков" (Обед+Перерыв).
-            cell = row.getCell(8);
-            cell.setCellValue(operator.getUnpaidTime() / operator.getAllCalls());
-            // Состояние "недоступен для приема входящих звонков" (Обед+Перерыв).
             cell = row.getCell(9);
-            cell.setCellValue(operator.getUnpaidTime());
+            cell.setCellValue(new BigDecimal(operator.getUnpaidTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
             // Всего звонков, распределенных на диспетчера, шт
             cell = row.getCell(10);
             cell.setCellValue(operator.getAllCalls());
@@ -107,9 +108,9 @@ public class DayResultTask implements Callable<Void> {
             // пропущенных вызовов
             cell = row.getCell(14);
             cell.setCellValue(operator.getMissCalls());
-// пропущенные вызовы
+            // пропущенные вызовы
             cell = row.getCell(15);
-            cell.setCellValue(new BigDecimal(operator.getMissCalls()).divide(allCalls).doubleValue());
+            cell.setCellValue(new BigDecimal(operator.getMissCalls()).divide(allCalls, 3, RoundingMode.HALF_EVEN).doubleValue());
         }
     }
 

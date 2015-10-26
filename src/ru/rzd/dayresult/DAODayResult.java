@@ -74,10 +74,11 @@ public class DAODayResult {
         return id;
     }
 
-    public ResultSet getAgentStates(int id, Calendar date) throws SQLException {
-        PreparedStatement getAgentState = connection.prepareStatement("Select  eventType, eventDateTime from AgentStateDetail "
-                + "where eventDateTime > ? and eventDateTime < ? and "
-                + "agentID=? order by eventDateTime");
+    public ResultSet getAgentStates(String name, Calendar date) throws SQLException {
+        PreparedStatement getAgentState = connection.prepareStatement("Select  a.eventType, a.eventDateTime from AgentStateDetail a "
+                + "inner join Resource r on r.resourceID=a.agentID "
+                + "where a.eventDateTime > ? and a.eventDateTime < ? "
+                + "and r.resourceName = ? order by a.eventDateTime");
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
                 19, 0, 0, 1);
         Timestamp end = new Timestamp(tStart.getTime());
@@ -90,19 +91,21 @@ public class DAODayResult {
 
         getAgentState.setTimestamp(1, tStart);
         getAgentState.setTimestamp(2, end);
-        getAgentState.setInt(3, id);
+        getAgentState.setString(3, name);
         return getAgentState.executeQuery();
     }
 
-    public ResultSet getCallDetail(int id, Timestamp startTime) throws SQLException {
-        PreparedStatement getAgentState = connection.prepareStatement("Select  ringTime, talkTime, holdTime, workTime from AgentConnectionDetail "
-                + "where startDateTime > ? and startDateTime < ? and "
-                + "resourceID=?");
+    public ResultSet getCallDetail(String name, Timestamp startTime) throws SQLException {
+        PreparedStatement getAgentState = connection.prepareStatement("Select  a.ringTime, a.talkTime, a.holdTime, a.workTime "
+                + "from AgentConnectionDetail a "
+                + "inner join Resource r on r.resourceID=a.resourceID "
+                + "where a.startDateTime > ? and a.startDateTime < ? and "
+                + "r.resourceName=?");
         Timestamp end = new Timestamp(startTime.getTime() + 50400000L);
 
         getAgentState.setTimestamp(1, startTime);
         getAgentState.setTimestamp(2, end);
-        getAgentState.setInt(3, id);
+        getAgentState.setString(3, name);
         return getAgentState.executeQuery();
     }
 
