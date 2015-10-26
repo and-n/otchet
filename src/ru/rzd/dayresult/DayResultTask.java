@@ -50,7 +50,9 @@ public class DayResultTask implements Callable<Void> {
                 int work = rset.getInt(4);
                 operator.addTimes(ring, talk, hold, work);
             }
-            addRows();
+            if (operator.getLastState().equals(AgentState.LogOut)) {
+                addRows();
+            }
         }
         return null;
     }
@@ -83,13 +85,13 @@ public class DayResultTask implements Callable<Void> {
 
             // Поствызовная обработка, %
             cell = row.getCell(6);
-            cell.setCellValue(operator.getWorkTime() / operator.getStaffTime());
+            cell.setCellValue(new BigDecimal(operator.getWorkTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
             // Ring Time (среднее время на 1 звонок), сек
             cell = row.getCell(7);
-            cell.setCellValue(operator.getHoldTime() / operator.getStaffTime());
+            cell.setCellValue(new BigDecimal(operator.getHoldTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
             // Ring Time (среднее время на 1 звонок), сек
             cell = row.getCell(8);
-            cell.setCellValue(operator.getRingTime() / operator.getAllCalls());
+            cell.setCellValue(new BigDecimal(operator.getRingTime()).divide(allCalls, 2, RoundingMode.HALF_EVEN).doubleValue());
             // Состояние "недоступен для приема входящих звонков" (Обед+Перерыв).
             cell = row.getCell(9);
             cell.setCellValue(new BigDecimal(operator.getUnpaidTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
@@ -101,7 +103,13 @@ public class DayResultTask implements Callable<Void> {
             cell.setCellValue(operator.getAllCalls() - operator.getMissCalls());
             // Средняя продолжительность диалога (секунд)
             cell = row.getCell(12);
-            cell.setCellValue(operator.getTalkTime() / (operator.getAllCalls() - operator.getMissCalls()));
+            if (operator.getAllCalls() - operator.getMissCalls() != 0) {
+                BigDecimal db = new BigDecimal(operator.getTalkTime())
+                        .divide(new BigDecimal(operator.getAllCalls() - operator.getMissCalls()), 2, RoundingMode.HALF_EVEN);
+                cell.setCellValue(db.doubleValue());
+            } else {
+                cell.setCellValue(0D);
+            }
             //максимальное время разговора.
             cell = row.getCell(13);
             cell.setCellValue(operator.getMaxTalkTime());
