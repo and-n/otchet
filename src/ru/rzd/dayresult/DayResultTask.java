@@ -43,14 +43,16 @@ public class DayResultTask implements Callable<Void> {
         System.out.println("HI " + iname + " " + operator.getLoginTime());
         if (operator.getLoginTime() != null) {
             ResultSet rset = dao.getCallDetail(iname, operator.getLoginTime());
+            Timestamp last = new Timestamp(1);
             while (rset.next()) {
                 int ring = rset.getInt(1);
                 int talk = rset.getInt(2);
                 int hold = rset.getInt(3);
                 int work = rset.getInt(4);
+                last = rset.getTimestamp(5);
                 operator.addTimes(ring, talk, hold, work);
             }
-            if (operator.getLastState().equals(AgentState.LogOut)) {
+            if (operator.getLastState().equals(AgentState.LogOut) && operator.getLastTime().after(last)) {
                 addRows();
             }
         }

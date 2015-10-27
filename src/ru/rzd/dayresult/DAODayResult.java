@@ -96,11 +96,11 @@ public class DAODayResult {
     }
 
     public ResultSet getCallDetail(String name, Timestamp startTime) throws SQLException {
-        PreparedStatement getAgentState = connection.prepareStatement("Select  a.ringTime, a.talkTime, a.holdTime, a.workTime "
+        PreparedStatement getAgentState = connection.prepareStatement("Select  a.ringTime, a.talkTime, a.holdTime, a.workTime, a.startDateTime "
                 + "from AgentConnectionDetail a "
                 + "inner join Resource r on r.resourceID=a.resourceID "
                 + "where a.startDateTime > ? and a.startDateTime < ? and "
-                + "r.resourceName=?");
+                + "r.resourceName=? order by a.startDateTime");
         Timestamp end = new Timestamp(startTime.getTime() + 50400000L);
 
         getAgentState.setTimestamp(1, startTime);

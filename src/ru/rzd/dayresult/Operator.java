@@ -46,17 +46,24 @@ public class Operator {
     private AgentState lastState;
     private Timestamp lastTime;
     private Timestamp loginTime;
+    private Timestamp loginWorkTime;
 
     public void addState(AgentState state, Timestamp time) {
         long t = lastTime != null ? time.getTime() - lastTime.getTime() : 0;
         if (loginTime != null || state.equals(AgentState.LogIn)) {
             switch (state) {
                 case LogIn: {
-                    loginTime = time;
+                    if (loginTime == null) {
+                        loginTime = time;
+                    } else if (time.getTime() - lastTime.getTime() > 28800000L) {
+                        loginTime = time;
+                        reset();
+                    }
+                    loginWorkTime = time;
                     break;
                 }
                 case LogOut: {
-                    staffTime = staffTime + time.getTime() - loginTime.getTime();
+                    staffTime = staffTime + time.getTime() - loginWorkTime.getTime();
                     setTime(t);
                     break;
                 }
@@ -183,6 +190,12 @@ public class Operator {
         } else {
             addCall(false);
         }
+    }
+
+    private void reset() {
+        unpaidTime = 0;
+        staffTime = 0;
+        waitTime = 0;
     }
 
 }
