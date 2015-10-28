@@ -27,7 +27,7 @@ import ru.rzd.otchet.Pair;
  */
 public class DayResultLogic {
 
-    public void createReport(Calendar date, Form f) throws FileNotFoundException, IOException, Exception {
+    public void createReport(Calendar date, Calendar end, boolean isPeriod, Form f) throws FileNotFoundException, IOException, Exception {
         File sh = new File("folder" + File.separator + "ДИСПЕТЧЕРА.xlsx");
         if (!sh.exists()) {
             throw new FileNotFoundException("Не найден файл шаблона.");
@@ -50,7 +50,6 @@ public class DayResultLogic {
             DAODayResult dao = new DAODayResult();
             DayResultTask dtast = new DayResultTask(operator, dao, p.getL(), date);
             flist.add(executor.submit(dtast));
-
         }
         for (Future future : flist) {
             future.get();

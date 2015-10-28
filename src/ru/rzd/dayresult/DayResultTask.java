@@ -31,8 +31,6 @@ public class DayResultTask implements Callable<Void> {
 
     @Override
     public Void call() throws Exception {
-//        int id = dao.getID(operator.getSurname(), operator.getInitials());
-//        operator.setId(id);
         String iname = operator.getInitials() + " " + operator.getSurname();
         ResultSet rs = dao.getAgentStates(iname, date);
         while (rs.next()) {
@@ -56,6 +54,11 @@ public class DayResultTask implements Callable<Void> {
                 addRows();
             }
         }
+        return null;
+    }
+
+    private Operator task(Calendar start) {
+
         return null;
     }
 
