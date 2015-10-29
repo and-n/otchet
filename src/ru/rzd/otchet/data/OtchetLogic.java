@@ -234,6 +234,19 @@ public class OtchetLogic {
         }
     }
 
+    public void createReport(Calendar date, Calendar end, Form f) throws SQLException, FileNotFoundException, IOException {
+        if (date != null && end != null) {
+            boolean b = ISCONSOLE;
+            ISCONSOLE = true;
+            for (; date.before(end) || date.equals(end);
+                    date.setTimeInMillis(date.getTimeInMillis() + 86400000L)) {
+                createReport(date, f);
+            }
+            ISCONSOLE = b;
+        }
+
+    }
+
     private List<Statist30min> getStatsByDay(Calendar cal, Map<Integer, AgentState> statesMap) throws SQLException {
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(cal.getTimeInMillis());
