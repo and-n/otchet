@@ -198,4 +198,21 @@ public class Operator {
         waitTime = 0;
     }
 
+    void sumOperator(Operator operator) {
+        allCals += operator.allCals;
+        changeCalls += operator.changeCalls;
+        holdTime += operator.holdTime;
+        lastState = operator.lastState;
+        lastTime = operator.lastTime;
+        loginTime = operator.loginTime;
+        maxTalkTime = Math.max(maxTalkTime, operator.getMaxTalkTime());
+        missCalls += operator.missCalls;
+        ringTime += operator.ringTime;
+        staffTime += operator.staffTime;
+        talkTime += operator.talkTime;
+        unpaidTime += operator.unpaidTime;
+        waitTime += operator.waitTime;
+        workTime += operator.workTime;
+    }
+
 }

@@ -28,10 +28,18 @@ import ru.rzd.otchet.Pair;
  * @author ATonevitskiy
  */
 public class DayResultLogic {
-    
+
+    private boolean isPeriod;
+
     public void createReport(Calendar date, Calendar end, boolean isPeriod, Form f) throws FileNotFoundException, IOException, Exception {
         if (isPeriod) {
-            JOptionPane.showMessageDialog(null, "Пока не готово!");
+//            JOptionPane.showMessageDialog(f, "Пока не готово!");
+            this.isPeriod = true;
+            Sheet sheet1 = getSheet();
+            List< Pair< Row, String>> fio = findFIO(sheet1);
+            getPeriodInfo(date, end, fio);
+            savePeriodReport(sheet1, f, date, end);
+
         } else if (end != null && end.after(date)) {
             boolean b = Form.ISCONSOLE;
             ISCONSOLE = true;
@@ -50,7 +58,7 @@ public class DayResultLogic {
             saveReport(sheet1, f, date);
         }
     }
-    
+
     private List<Pair<Row, String>> findFIO(Sheet sheet1) {
         List<Pair<Row, String>> res = new ArrayList<>();
         Row r = sheet1.getRow(3);
@@ -63,12 +71,17 @@ public class DayResultLogic {
         }
         return res;
     }
-    
+
     private String getFileName(String day_report, Calendar date) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
         return day_report + sdf.format(date.getTime());
     }
-    
+
+    private String getFileName(String day_report, Calendar date1, Calendar date2) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+        return day_report + sdf.format(date1.getTime()) + "-" + sdf.format(date2.getTime());
+    }
+
     private Sheet getSheet() throws FileNotFoundException, IOException, Exception {
         File sh = new File("folder" + File.separator + "ДИСПЕТЧЕРА.xlsx");
         if (!sh.exists()) {
@@ -81,7 +94,7 @@ public class DayResultLogic {
         }
         return sheet1;
     }
-    
+
     private void getInfo(Calendar date, List< Pair< Row, String>> fio) throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(4);
         List<Future<Void>> flist = new ArrayList<>();
@@ -101,7 +114,27 @@ public class DayResultLogic {
         }
         executor.shutdown();
     }
-    
+
+    private void getPeriodInfo(Calendar date1, Calendar date2, List< Pair< Row, String>> fio) throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+        List<Future<Void>> flist = new ArrayList<>();
+        for (Pair<Row, String> p : fio) {
+            String[] init = p.getR().split("\\s+");
+            if (init.length != 3) {
+                throw new Exception("ФИО не соответсвует ожиданию: " + p.getR());
+            }
+            String surname = init[0].toUpperCase().charAt(0) + init[0].toUpperCase().toLowerCase().substring(1);
+            Operator operator = new Operator(p.getR().substring(surname.length()), surname);
+            DAODayResult dao = new DAODayResult();
+            DayResultPeriodTask ptast = new DayResultPeriodTask(operator, dao, p.getL(), date1, date2);
+            flist.add(executor.submit(ptast));
+        }
+        for (Future future : flist) {
+            future.get();
+        }
+        executor.shutdown();
+    }
+
     private void saveReport(Sheet sheet1, Form f, Calendar date) throws FileNotFoundException, IOException {
         String fileName = getFileName("Показатели работы операторов ", date);
         String folder = "";
@@ -122,5 +155,26 @@ public class DayResultLogic {
             fos.close();
         }
     }
-    
+
+    private void savePeriodReport(Sheet sheet1, Form f, Calendar date1, Calendar date2) throws FileNotFoundException, IOException {
+        String fileName = getFileName("Показатели работы операторов ", date1, date2);
+        String folder = "";
+        if (ISCONSOLE) {
+            folder = "OperatorReports";
+            new File(folder).mkdir();
+        } else {
+            folder = f.selectSaveFile();
+        }
+        if (!folder.isEmpty()) {
+            FormulaEvaluator formulaEvaluator = sheet1.getWorkbook().getCreationHelper().createFormulaEvaluator();
+            formulaEvaluator.evaluateAll();
+            DateFormat df1 = new SimpleDateFormat("dd.MM.yyyy");
+            sheet1.getRow(1).getCell(0).setCellValue(df1.format(date1.getTime()) + "-" + df1.format(date2.getTime()));
+            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xlsx", false);
+            sheet1.getWorkbook().write(fos);
+            sheet1.getWorkbook().close();
+            fos.close();
+        }
+    }
+
 }
