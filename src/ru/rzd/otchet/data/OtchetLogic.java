@@ -33,7 +33,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import ru.rzd.otchet.Form;
 import static ru.rzd.otchet.Form.ISCONSOLE;
-import ru.rzd.otchet.Pair;
 
 /**
  *
@@ -158,6 +157,7 @@ public class OtchetLogic {
         Cell c12 = row.getCell(12);
         BigDecimal db12 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
         c12.setCellValue(db12.doubleValue());
+        System.out.println("ANS20 " + period.getAnswerIn20Sec() + " ansall " + ansCalls);
     }
 
     private void addPeriodRow(Row row, Period period, Calendar date, Statist60min stat) {
@@ -248,7 +248,7 @@ public class OtchetLogic {
 
     }
 
-    private List<Statist60min> getStatsByDay(Calendar cal, Map<Integer, Pair<AgentState, Long>> statesMap) throws SQLException {
+    private List<Statist60min> getStatsByDay(Calendar cal, Map<Integer, AgentState> statesMap) throws SQLException {
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(cal.getTimeInMillis());
         List<Statist60min> stats = new ArrayList<>();
@@ -271,29 +271,26 @@ public class OtchetLogic {
             Statist60min sm = new Statist60min(worked);
             while (rs.next()) {
                 AgentState type = AgentState.getByCode(rs.getInt(1));
-                Integer id = rs.getInt(3);
+                Integer id = new Integer(rs.getInt(3));
                 Timestamp time = rs.getTimestamp(2);
-                Pair<AgentState, Long> pair = new Pair(type, time.getTime());
                 if (type.equals(AgentState.LogIn)) {
 //                    sm.addWorkAgent();
-                    if (statesMap.get(id) == null) {
-                        sm.addWorkTime(date.getTimeInMillis() - time.getTime());
-                    }
-                    statesMap.put(id, pair);
+                    sm.addWorkTime(date.getTimeInMillis() - time.getTime());
+                    statesMap.put(id, type);
                 } else if (type.equals(AgentState.LogOut)) {
                     if (statesMap.get(id) != null && !statesMap.get(id).equals(AgentState.NotReady)) {
                         sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
                     }
                     statesMap.remove(id);
                 } else if (type.equals(AgentState.Ready)) {
-                    if (statesMap.get(id) == null || (!statesMap.get(id).equals(AgentState.Ready) && !statesMap.get(id).equals(AgentState.LogIn))) {
+                    if (statesMap.get(id) == null || statesMap.get(id).equals(AgentState.NotReady)) {
                         sm.addWorkTime(endOfPeriod.getTimeInMillis() - time.getTime());
                     }
-                    statesMap.put(id, pair);
+                    statesMap.put(id, type);
                 } else if (type.equals(AgentState.NotReady)) {
 //                    sm.removeWorkAgent();
                     sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
-                    statesMap.put(id, pair);
+                    statesMap.put(id, type);
                 }
                 // removeLogOuts(statesMap);
             }
@@ -305,23 +302,20 @@ public class OtchetLogic {
     }
 
     // работает
-    private Map<Integer, Pair<AgentState, Long>> getStartStats(Calendar date) throws SQLException {
+    private Map<Integer, AgentState> getStartStats(Calendar date) throws SQLException {
         ResultSet res = spravka.getStartAgentState(date);
-        Map<Integer, Pair<AgentState, Long>> states = new HashMap<>();
+        Map<Integer, AgentState> states = new HashMap<>();
         while (res.next()) {
-            Integer key = new Integer(res.getInt(1));
-            Timestamp time = res.getTimestamp(2);
-            int as = res.getInt(3);
-            if (as != AgentState.LogOut.ordinal() || as != AgentState.NotReady.ordinal() // || states.containsKey(key)
-                    ) {
-                states.put(key, new Pair<AgentState, Long>(AgentState.getByCode(as), time.getTime()));
+            Integer key = new Integer(res.getInt(3));
+            int as = res.getInt(1);
+            if (as == AgentState.LogIn.ordinal() || as == AgentState.Ready.ordinal()
+                    || states.containsKey(key)) {
+                states.put(key, AgentState.getByCode(as));
             }
         }
-//        AgentState as = states.get(i).getL();
-
         Set<Integer> s = new HashSet<Integer>(states.keySet());
         for (Integer i : s) {
-            AgentState as = states.get(i).getL();
+            AgentState as = states.get(i);
             if (as.equals(AgentState.LogOut)) {
                 states.remove(i);
             }
@@ -329,11 +323,10 @@ public class OtchetLogic {
         return states;
     }
 
-//    @Deprecated
-    private int getWorked(Map<Integer, Pair<AgentState, Long>> statesMap) {
+    private int getWorked(Map<Integer, AgentState> statesMap) {
         int l = 0;
         for (Integer i : statesMap.keySet()) {
-            if (!statesMap.get(i).getL().equals(AgentState.NotReady)) {
+            if (!statesMap.get(i).equals(AgentState.NotReady)) {
                 ++l;
             }
         }

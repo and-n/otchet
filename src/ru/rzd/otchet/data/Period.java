@@ -23,6 +23,7 @@ public class Period {
             }
             if (ansTime == 10 && talkTime == 0) {
                 calls--;
+                answerIn20Sec--;
             }
             answerTime += ansTime;
             this.talkTime += talkTime;
