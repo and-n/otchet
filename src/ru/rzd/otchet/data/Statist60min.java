@@ -7,15 +7,14 @@ import java.math.RoundingMode;
  *
  * @author ATonevitskiy
  */
-@Deprecated
-public class Statist30min {
+public class Statist60min {
 
-    private final long min30 = 1800000L;
+    private final long min60 = 3600000L;
 
     private int startState;
     private long workTime = 0;
 
-    public Statist30min(int startState) {
+    public Statist60min(int startState) {
         this.startState = startState;
     }
 
@@ -32,10 +31,10 @@ public class Statist30min {
     }
 
     public long getAllWorkTime() {
-        return workTime + (startState * min30);
+        return workTime + (startState * min60);
     }
 
-    public BigDecimal getAgentPer30min() {
+    public BigDecimal getAgentPer60min() {
         BigDecimal mh = new BigDecimal(getAllWorkTime())
                 .divide(new BigDecimal(1000), 1, RoundingMode.HALF_EVEN)
                 .divide(new BigDecimal(3600), 3, RoundingMode.HALF_EVEN);

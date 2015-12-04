@@ -18,7 +18,7 @@ public class Period {
         queueTime += outTime;
         ++calls;
         if (!isLost) {
-            if ((ansTime + outTime) <= 20) {
+            if (outTime <= 20) {
                 answerIn20Sec++;
             }
             if (ansTime == 10 && talkTime == 0) {

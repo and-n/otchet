@@ -103,7 +103,7 @@ public class DayResultLogic {
             if (init.length != 3) {
                 throw new Exception("ФИО не соответсвует ожиданию: " + p.getR());
             }
-            String surname = init[0].toUpperCase().charAt(0) + init[0].toUpperCase().toLowerCase().substring(1);
+            String surname = init[0].toUpperCase().charAt(0) + init[0].toLowerCase().substring(1);
             Operator operator = new Operator(p.getR().substring(surname.length()), surname);
             DAODayResult dao = new DAODayResult();
             DayResultTask dtast = new DayResultTask(operator, dao, p.getL(), date);

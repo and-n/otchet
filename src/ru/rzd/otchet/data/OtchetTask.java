@@ -25,7 +25,7 @@ public class OtchetTask implements Callable<Period> {
 
     @Override
     public Period call() throws Exception {
-        ResultSet res = dao.get30minPeriod(date);
+        ResultSet res = dao.get60minPeriod(date);
         Period p = new Period();
         while (res.next()) {
             int qt = res.getInt(1);
