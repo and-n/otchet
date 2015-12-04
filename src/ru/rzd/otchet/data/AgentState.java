@@ -16,7 +16,13 @@ public enum AgentState {
     Work,
     LogOut;
 
-    public AgentState getByCode(int code) {
+    /**
+     * Получить состояние агента по цифре(коду).
+     *
+     * @param code номер состояния, записанный в базе
+     * @return состояние
+     */
+    public static AgentState getByCode(int code) {
         if (code > 0 && code < AgentState.values().length) {
             return AgentState.values()[code];
         }
