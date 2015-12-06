@@ -33,6 +33,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import ru.rzd.otchet.Form;
 import static ru.rzd.otchet.Form.ISCONSOLE;
+import ru.rzd.otchet.Pair;
 
 /**
  *
@@ -170,8 +171,7 @@ public class OtchetLogic {
         c14.setCellValue(ap.doubleValue());
 
         Cell c15 = row.getCell(15);
-        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN)
-                .divide(new BigDecimal(2));
+        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
         c15.setCellValue(db15.doubleValue());
     }
 
@@ -217,7 +217,7 @@ public class OtchetLogic {
 
     public void createReport(Calendar date, Form f) throws SQLException, FileNotFoundException, IOException {
         List<Period> report = getReportByDay(date);
-        List<Statist60min> stats = getStatsByDay(date, null);
+        List<Statist60min> stats = getStatsByDay(date);
         Workbook wb = createPeriodInSpravka(date, report, stats);
         String fileName = getFileName(OtchetLogic.ITOG_SUTOK, date);
         String folder = "";
@@ -248,90 +248,86 @@ public class OtchetLogic {
 
     }
 
-    private List<Statist60min> getStatsByDay(Calendar cal, Map<Integer, AgentState> statesMap) throws SQLException {
+    private List<Statist60min> getStatsByDay(Calendar cal) throws SQLException {
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(cal.getTimeInMillis());
-        List<Statist60min> stats = new ArrayList<>();
-        if (spravka == null) {
-            spravka = new DAOOtchet();
-        }
-        if (statesMap == null) {
-            statesMap = getStartStats(date);
-        }
-
         date.set(Calendar.HOUR_OF_DAY, 0);
         date.set(Calendar.MINUTE, 0);
         date.set(Calendar.SECOND, 0);
         date.set(Calendar.MILLISECOND, 0);
+
+        List<Statist60min> stats = new ArrayList<>();
+        if (spravka == null) {
+            spravka = new DAOOtchet();
+        }
+
+        Map<Integer, Pair<AgentState, Long>> statesMap = getStartStats(date);
+
         Calendar endOfPeriod = Calendar.getInstance();
         for (int i = 0; i < 24; i++) {
             endOfPeriod.setTimeInMillis(date.getTimeInMillis() + 3600000L);
             ResultSet rs = spravka.getAgentStatePer60min(date);
-            int worked = getWorked(statesMap);
-            Statist60min sm = new Statist60min(worked);
+            Statist60min sm = new Statist60min();
             while (rs.next()) {
                 AgentState type = AgentState.getByCode(rs.getInt(1));
                 Integer id = new Integer(rs.getInt(3));
                 Timestamp time = rs.getTimestamp(2);
                 if (type.equals(AgentState.LogIn)) {
-//                    sm.addWorkAgent();
-                    sm.addWorkTime(date.getTimeInMillis() - time.getTime());
-                    statesMap.put(id, type);
+                    statesMap.put(id, new Pair<>(type, time.getTime()));
                 } else if (type.equals(AgentState.LogOut)) {
-                    if (statesMap.get(id) != null && !statesMap.get(id).equals(AgentState.NotReady)) {
-                        sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
+                    if (statesMap.get(id) != null) {
+                        if (!statesMap.get(id).equals(AgentState.NotReady) || !statesMap.get(id).equals(AgentState.LogIn)) {
+                            sm.addWorkTime(time.getTime() - statesMap.get(id).getR());
+                        }
+                        statesMap.remove(id);
                     }
-                    statesMap.remove(id);
-                } else if (type.equals(AgentState.Ready)) {
-                    if (statesMap.get(id) == null || statesMap.get(id).equals(AgentState.NotReady)) {
-                        sm.addWorkTime(endOfPeriod.getTimeInMillis() - time.getTime());
+                } else {
+                    if (statesMap.get(id) != null) {
+                        // если время от логина не считать рабочим, то добавить логин.
+                        if (!statesMap.get(id).equals(AgentState.NotReady) || !statesMap.get(id).equals(AgentState.LogIn)) {
+                            sm.addWorkTime(time.getTime() - statesMap.get(id).getR());
+                        }
+                        statesMap.put(id, new Pair<AgentState, Long>(type, time.getTime()));
                     }
-                    statesMap.put(id, type);
-                } else if (type.equals(AgentState.NotReady)) {
-//                    sm.removeWorkAgent();
-                    sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
-                    statesMap.put(id, type);
                 }
                 // removeLogOuts(statesMap);
             }
+            for (int key : statesMap.keySet()) {
+                if (!statesMap.get(key).equals(AgentState.NotReady) || !statesMap.get(key).equals(AgentState.LogIn)) {
+                    sm.addWorkTime(endOfPeriod.getTimeInMillis() - statesMap.get(key).getR());
+                }
+            }
+            setTimeToAll(statesMap, endOfPeriod);
             stats.add(sm);
             date.setTimeInMillis(date.getTimeInMillis() + 3600000L);
+
         }
 
         return stats;
     }
 
     // работает
-    private Map<Integer, AgentState> getStartStats(Calendar date) throws SQLException {
+    private Map<Integer, Pair<AgentState, Long>> getStartStats(Calendar date) throws SQLException {
         ResultSet res = spravka.getStartAgentState(date);
-        Map<Integer, AgentState> states = new HashMap<>();
+        Map<Integer, Pair<AgentState, Long>> states = new HashMap<>();
         while (res.next()) {
             Integer key = new Integer(res.getInt(3));
-            int as = res.getInt(1);
-            if (as == AgentState.LogIn.ordinal() || as == AgentState.Ready.ordinal()
-                    || states.containsKey(key)) {
-                states.put(key, AgentState.getByCode(as));
-            }
+            AgentState as = AgentState.getByCode(res.getInt(1));
+            Timestamp time = res.getTimestamp(2);
+            Pair<AgentState, Long> p = new Pair<AgentState, Long>(as, new Long(time.getTime()));
+            states.put(key, p);
         }
-        Set<Integer> s = new HashSet<Integer>(states.keySet());
-        for (Integer i : s) {
-            AgentState as = states.get(i);
-            if (as.equals(AgentState.LogOut)) {
-                states.remove(i);
-            }
-        }
+        setTimeToAll(states, date);
         return states;
     }
 
-    private int getWorked(Map<Integer, AgentState> statesMap) {
-        int l = 0;
-        for (Integer i : statesMap.keySet()) {
-            if (!statesMap.get(i).equals(AgentState.NotReady)) {
-                ++l;
-            }
+    private void setTimeToAll(Map<Integer, Pair<AgentState, Long>> states, Calendar date) {
+        Set<Integer> s = new HashSet<Integer>(states.keySet());
+        for (Integer i : s) {
+            Pair p = states.get(i);
+            p.setR(date.getTimeInMillis());
+            states.put(i, p);
         }
-        System.out.println("WORKED " + l);
-        return l;
     }
 
 }
