@@ -14,7 +14,8 @@ public enum AgentState {
     Reserved,
     Talking,
     Work,
-    LogOut;
+    LogOut,
+    PayedNotReady;
 
     /**
      * Получить состояние агента по цифре(коду).

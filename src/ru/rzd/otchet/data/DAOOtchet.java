@@ -42,7 +42,7 @@ public class DAOOtchet {
         try {
             connection = DriverManager.getConnection(connectionUrl1);
             simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
-            getAgentState = connection.prepareCall("Select  eventType, eventDateTime, agentID from AgentStateDetail "
+            getAgentState = connection.prepareCall("Select  eventType, eventDateTime, agentID, reasonCode from AgentStateDetail "
                     + "where eventDateTime > ? and eventDateTime < ? order by eventDateTime");
         } catch (SQLException ex) {
             if (!Form.ISCONSOLE) {
@@ -90,7 +90,7 @@ public class DAOOtchet {
 
     public ResultSet get60minPeriod(Calendar date) throws SQLException {
 
-        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime from ContactCallDetail c"
+        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime, a.holdTime, a.workTime from ContactCallDetail c"
                 + " left join ContactQueueDetail q ON c.sessionID = q.sessionID "
                 + " left join AgentConnectionDetail a ON q.sessionID =a.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
                 + "and c.applicationID=0");

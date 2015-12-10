@@ -46,6 +46,8 @@ public class OtchetLogic {
      */
     public static final int REQUEST_TIMEOUT = 25;
 
+    public static final int[] PAY_REASON_CODE = new int[]{75, 76};
+
     public static final String ITOG_SUTOK = "Справка по итогам суток ";
     private DAOOtchet spravka;
 
@@ -136,26 +138,33 @@ public class OtchetLogic {
         Cell c5 = row.getCell(5);
         int ansCalls = period.getCalls() - period.getLostCalls();
         c5.setCellValue(ansCalls);
-        Cell c6 = row.getCell(6);
+        // два новых столбца 6 и 7
+        Cell c6new = row.getCell(6);
+        c6new.setCellValue(period.getLostCalls());
+
+        Cell c7new = row.getCell(7);
+        c7new.setCellValue(period.getAnswerIn20Sec());
+
+        Cell c6 = row.getCell(8);
         int db6 = ansCalls == 0 ? 0 : new BigDecimal(period.getTalkTime()).divide(new BigDecimal(ansCalls), RoundingMode.HALF_EVEN).intValueExact();
         c6.setCellValue(db6);
-        Cell c7 = row.getCell(7);
+        Cell c7 = row.getCell(9);
         int db7 = ansCalls == 0 ? 0 : new BigDecimal(period.getAnswerTime()).divide(new BigDecimal(ansCalls), RoundingMode.HALF_EVEN).intValueExact();
         c7.setCellValue(db7);
 
-        Cell c8 = row.getCell(8);
+        Cell c8 = row.getCell(10);
         int db8 = ansCalls == 0 ? 0 : new BigDecimal(period.getQueueTime()).divide(new BigDecimal(period.getCalls()), RoundingMode.HALF_EVEN).intValueExact();
         c8.setCellValue(db8);
-        Cell c9 = row.getCell(9);
+        Cell c9 = row.getCell(11);
         c9.setCellValue(period.getLostCallsIn5Sec());
-        Cell c10 = row.getCell(10);
+        Cell c10 = row.getCell(12);
         BigDecimal db10 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
         c10.setCellValue(db10.doubleValue());
-        Cell c11 = row.getCell(11);
+        Cell c11 = row.getCell(13);
         BigDecimal db11 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls() - period.getLostCallsIn5Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
         c11.setCellValue(db11.doubleValue());
 
-        Cell c12 = row.getCell(12);
+        Cell c12 = row.getCell(14);
         BigDecimal db12 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
         c12.setCellValue(db12.doubleValue());
         System.out.println("ANS20 " + period.getAnswerIn20Sec() + " ansall " + ansCalls);
@@ -163,7 +172,7 @@ public class OtchetLogic {
 
     private void addPeriodRow(Row row, Period period, Calendar date, Statist60min stat) {
         addPeriodRow(row, period, date);
-        BigDecimal ap = stat.getAgentPer60min();
+        BigDecimal ap = stat.getAgentWorkTime60min();
         int ansCalls = period.getCalls() - period.getLostCalls();
         Cell c13 = row.getCell(13);
         c13.setCellValue(ap.doubleValue());
@@ -182,11 +191,13 @@ public class OtchetLogic {
         int ans20 = 0;
         int lost5 = 0;
         int lost = 0;
+        int talk = 0;
         for (Period p : periodList) {
             all += p.getCalls();
             lost += p.getLostCalls();
             lost5 += p.getLostCallsIn5Sec();
             ans20 += p.getAnswerIn20Sec();
+            talk += p.getTalkTime();
         }
         Cell c2 = sheet.getRow(1).getCell(2);
         c2.setCellValue(all);
@@ -208,6 +219,10 @@ public class OtchetLogic {
         Cell c8 = sheet.getRow(7).getCell(2);
         BigDecimal bd3 = new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c8.setCellValue(bd3.floatValue());
+
+        Cell c9 = sheet.getRow(8).getCell(2);
+        BigDecimal bd4 = new BigDecimal(talk).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
+        c9.setCellValue(bd4.floatValue());
     }
 
     private String getFileName(String ITOG_SUTOK, Calendar date) {
@@ -328,6 +343,15 @@ public class OtchetLogic {
             p.setR(date.getTimeInMillis());
             states.put(i, p);
         }
+    }
+
+    private boolean isPayedReason(int code) {
+        for (int i = 0; i < PAY_REASON_CODE.length; i++) {
+            if (PAY_REASON_CODE[i] == code) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
