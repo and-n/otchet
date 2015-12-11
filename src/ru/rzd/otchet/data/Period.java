@@ -15,7 +15,6 @@ public class Period {
     private int calls, lostCalls, lostCallsIn5Sec, talkTime, answerTime, queueTime, answerIn20Sec;
 
     public void addCall(boolean isLost, int outTime, int talkTime, int ansTime) {
-        queueTime += outTime;
         ++calls;
         if (!isLost) {
             if (outTime <= 20) {
@@ -25,10 +24,11 @@ public class Period {
                 calls--;
                 answerIn20Sec--;
             }
-            answerTime += ansTime;
-            this.talkTime += talkTime;
+            answerTime += outTime;
+            this.talkTime += talkTime + ansTime;
         } else {
             lostCalls++;
+            queueTime += outTime;
             if (outTime <= 5) {
                 lostCallsIn5Sec++;
             }

@@ -112,6 +112,7 @@ public class OtchetLogic {
             } catch (IOException ex) {
                 Logger.getLogger(OtchetLogic.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NullPointerException ex) {
+                ex.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Неверный файл шаблона!!!");
                 System.exit(1);
             }
@@ -153,7 +154,7 @@ public class OtchetLogic {
         c7.setCellValue(db7);
 
         Cell c8 = row.getCell(10);
-        int db8 = ansCalls == 0 ? 0 : new BigDecimal(period.getQueueTime()).divide(new BigDecimal(period.getCalls()), RoundingMode.HALF_EVEN).intValueExact();
+        int db8 = period.getLostCalls() == 0 ? 0 : new BigDecimal(period.getQueueTime()).divide(new BigDecimal(period.getLostCalls()), RoundingMode.HALF_EVEN).intValueExact();
         c8.setCellValue(db8);
         Cell c9 = row.getCell(11);
         c9.setCellValue(period.getLostCallsIn5Sec());
@@ -167,19 +168,19 @@ public class OtchetLogic {
         Cell c12 = row.getCell(14);
         BigDecimal db12 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
         c12.setCellValue(db12.doubleValue());
-        System.out.println("ANS20 " + period.getAnswerIn20Sec() + " ansall " + ansCalls);
     }
 
     private void addPeriodRow(Row row, Period period, Calendar date, Statist60min stat) {
         addPeriodRow(row, period, date);
         BigDecimal ap = stat.getAgentWorkTime60min();
         int ansCalls = period.getCalls() - period.getLostCalls();
-        Cell c13 = row.getCell(13);
-        c13.setCellValue(ap.doubleValue());
-        Cell c14 = row.getCell(14);
+        Cell c13 = row.getCell(15);
+        c13.setCellValue(stat.getAgentPayedTime60min().doubleValue());
+
+        Cell c14 = row.getCell(16);
         c14.setCellValue(ap.doubleValue());
 
-        Cell c15 = row.getCell(15);
+        Cell c15 = row.getCell(17);
         BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
         c15.setCellValue(db15.doubleValue());
     }
@@ -220,7 +221,7 @@ public class OtchetLogic {
         BigDecimal bd3 = new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c8.setCellValue(bd3.floatValue());
 
-        Cell c9 = sheet.getRow(8).getCell(2);
+        Cell c9 = sheet.getRow(8).createCell(2);
         BigDecimal bd4 = new BigDecimal(talk).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
         c9.setCellValue(bd4.floatValue());
     }
@@ -287,20 +288,34 @@ public class OtchetLogic {
                 AgentState type = AgentState.getByCode(rs.getInt(1));
                 Integer id = new Integer(rs.getInt(3));
                 Timestamp time = rs.getTimestamp(2);
+                Pair<AgentState, Long> p = statesMap.get(id);
+
                 if (type.equals(AgentState.LogIn)) {
                     statesMap.put(id, new Pair<>(type, time.getTime()));
                 } else if (type.equals(AgentState.LogOut)) {
-                    if (statesMap.get(id) != null) {
-                        if (!statesMap.get(id).equals(AgentState.NotReady) || !statesMap.get(id).equals(AgentState.LogIn)) {
-                            sm.addWorkTime(time.getTime() - statesMap.get(id).getR());
+                    if (p != null) {
+                        if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)) {
+                            sm.addWorkTime(time.getTime() - p.getR());
                         }
                         statesMap.remove(id);
+                    }
+                } else if (type.equals(AgentState.NotReady)) {
+                    if (p != null) {
+                        // если время от логина не считать рабочим, то добавить логин.
+                        if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)) {
+                            sm.addWorkTime(time.getTime() - p.getR());
+                        }
+                        type = isPayedReason(rs.getInt(4)) ? AgentState.PayedNotReady : type;
+                        statesMap.put(id, new Pair<AgentState, Long>(type, time.getTime()));
                     }
                 } else {
                     if (statesMap.get(id) != null) {
                         // если время от логина не считать рабочим, то добавить логин.
-                        if (!statesMap.get(id).equals(AgentState.NotReady) || !statesMap.get(id).equals(AgentState.LogIn)) {
-                            sm.addWorkTime(time.getTime() - statesMap.get(id).getR());
+                        if (p.getL().equals(AgentState.PayedNotReady)) {
+                            sm.addPayedTime(time.getTime() - p.getR());
+                        } else if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)
+                                || !p.getL().equals(AgentState.PayedNotReady)) {
+                            sm.addWorkTime(time.getTime() - p.getR());
                         }
                         statesMap.put(id, new Pair<AgentState, Long>(type, time.getTime()));
                     }

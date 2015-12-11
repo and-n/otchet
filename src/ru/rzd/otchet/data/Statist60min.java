@@ -27,12 +27,12 @@ public class Statist60min {
         return workTime;
     }
 
-    public void setPayedTime(long payedTime) {
+    public void addPayedTime(long payedTime) {
         this.payedTime = payedTime;
     }
 
     public long getPayedTime() {
-        return payedTime;
+        return payedTime + workTime;
     }
 
     public BigDecimal getAgentWorkTime60min() {
