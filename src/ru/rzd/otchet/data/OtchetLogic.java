@@ -166,7 +166,7 @@ public class OtchetLogic {
         c11.setCellValue(db11.doubleValue());
 
         Cell c12 = row.getCell(14);
-        BigDecimal db12 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
+        BigDecimal db12 = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
         c12.setCellValue(db12.doubleValue());
     }
 
