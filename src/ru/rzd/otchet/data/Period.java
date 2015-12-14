@@ -24,7 +24,12 @@ public class Period {
                 calls--;
                 answerIn20Sec--;
             }
-            answerTime += outTime;
+            if (outTime - ansTime >= 0) {
+                answerTime += outTime - ansTime;
+            } else {
+                answerTime += outTime;
+            }
+
             this.talkTime += (talkTime + ansTime);
         } else {
             lostCalls++;

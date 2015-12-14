@@ -31,6 +31,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import ru.rzd.otchet.Form;
 import static ru.rzd.otchet.Form.ISCONSOLE;
 import ru.rzd.otchet.Pair;
@@ -99,10 +100,10 @@ public class OtchetLogic {
      */
     public Workbook createPeriodInSpravka(Calendar date, List<Period> periodList, List<Statist60min> stats) {
         Workbook wb = null;
-        File f = new File("folder" + File.separator + "ШАБЛОН.xls");
+        File f = new File("folder" + File.separator + "ШАБЛОН.xlsx");
         if (f.exists()) {
             try {
-                wb = new HSSFWorkbook(new FileInputStream(f));
+                wb = new XSSFWorkbook(new FileInputStream(f));
                 Sheet sheet = wb.getSheetAt(1);
                 for (int i = 13; i < 37; i++) {
                     Row row = sheet.getRow(i);
