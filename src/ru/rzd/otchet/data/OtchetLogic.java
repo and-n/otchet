@@ -26,7 +26,6 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -222,7 +221,7 @@ public class OtchetLogic {
         BigDecimal bd3 = new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c8.setCellValue(bd3.floatValue());
 
-        Cell c9 = sheet.getRow(8).createCell(2);
+        Cell c9 = sheet.getRow(8).getCell(2);
         BigDecimal bd4 = new BigDecimal(talk).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
         c9.setCellValue(bd4.floatValue());
     }
@@ -245,7 +244,7 @@ public class OtchetLogic {
             folder = f.selectSaveFile();
         }
         if (!folder.isEmpty()) {
-            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls", false);
+            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xlsx", false);
             wb.write(fos);
             wb.close();
             fos.close();
