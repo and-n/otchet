@@ -31,7 +31,8 @@ public class OtchetTask implements Callable<Period> {
             int qt = res.getInt(1);
             int at = res.getInt(2);
             int tt = res.getInt(3) + res.getInt(4) + res.getInt(5);
-            p.addCall(at == 0 && tt == 0, qt, tt, at);
+            long id = res.getLong(6);
+            p.addCall(at == 0 && tt == 0, qt, tt, at,id);
         }
         return p;
     }

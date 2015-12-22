@@ -5,6 +5,9 @@
  */
 package ru.rzd.otchet.data;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * Один период в отчете.
  *
@@ -14,14 +17,21 @@ public class Period {
 
     private int calls, lostCalls, lostCallsIn5Sec, talkTime, answerTime, queueTime, answerIn20Sec;
 
-    public void addCall(boolean isLost, int outTime, int talkTime, int ansTime) {
+    private Collection<Long> list = new ArrayList<>();
+
+    public void addCall(boolean isLost, int outTime, int talkTime, int ansTime, long id) {
         ++calls;
+        if (list.contains(id)) {
+            calls--;
+        } else {
+            list.add(id);
+        }
         if (!isLost) {
             if (outTime <= 20) {
                 answerIn20Sec++;
             }
             if (ansTime == 10 && talkTime == 0) {
-                calls--;
+                // calls--;
                 answerIn20Sec--;
             }
             if (outTime - ansTime >= 0) {

@@ -70,7 +70,8 @@ public class DAOOtchet {
     @Deprecated
     public ResultSet get30minPeriod(Calendar date) throws SQLException {
 
-        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime from ContactCallDetail c"
+        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime"
+                + " from ContactCallDetail c"
                 + " left join ContactQueueDetail q ON c.sessionID = q.sessionID "
                 + " left join AgentConnectionDetail a ON q.sessionID =a.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
                 + "and c.applicationID=0");
@@ -90,7 +91,8 @@ public class DAOOtchet {
 
     public ResultSet get60minPeriod(Calendar date) throws SQLException {
 
-        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime, a.holdTime, a.workTime from ContactCallDetail c"
+        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime, a.holdTime, a.workTime, c.sessionID "
+                + "from ContactCallDetail c"
                 + " left join ContactQueueDetail q ON c.sessionID = q.sessionID "
                 + " left join AgentConnectionDetail a ON q.sessionID =a.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
                 + "and c.applicationID=0");
