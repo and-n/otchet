@@ -21,16 +21,17 @@ public class Period {
 
     public void addCall(boolean isLost, int outTime, int talkTime, int ansTime, long id) {
         ++calls;
-        if (list.contains(id)) {
+        boolean dubl = list.contains(id); // повторяется ли id звонка 
+        if (dubl) {
             calls--;
         } else {
             list.add(id);
         }
         if (!isLost) {
-            if (outTime <= 20) {
+            if (outTime <= 20 && !dubl) {
                 answerIn20Sec++;
             }
-            if (ansTime == 10 && talkTime == 0) {
+            if (ansTime == 10 && talkTime == 0 && !dubl) {
                 // calls--;
                 answerIn20Sec--;
             }

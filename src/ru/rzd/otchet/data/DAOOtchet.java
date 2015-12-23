@@ -95,7 +95,7 @@ public class DAOOtchet {
                 + "from ContactCallDetail c"
                 + " left join ContactQueueDetail q ON c.sessionID = q.sessionID "
                 + " left join AgentConnectionDetail a ON q.sessionID =a.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
-                + "and c.applicationID=0");
+                + "and c.applicationID=0 order by c.startDateTime");
         getPeriod.clearParameters();
         Timestamp tStart = new Timestamp(date.getTimeInMillis());
         tStart.setNanos(0);
