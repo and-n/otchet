@@ -137,7 +137,7 @@ public class OtchetLogic {
         Cell c4 = row.getCell(4);
         c4.setCellValue(period.getCalls());
         Cell c5 = row.getCell(5);
-        int ansCalls = period.getCalls() - period.getLostCalls();
+        int ansCalls = period.getCalls() - period.getLostCalls() - period.getIvrCalls();
         c5.setCellValue(ansCalls);
         // два новых столбца 6 и 7
         Cell c6new = row.getCell(6);
@@ -158,15 +158,22 @@ public class OtchetLogic {
         c8.setCellValue(db8);
         Cell c9 = row.getCell(11);
         c9.setCellValue(period.getLostCallsIn5Sec());
-        Cell c10 = row.getCell(12);
-        BigDecimal db10 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+
+        // новый 12 столбец IVR
+        Cell c12new = row.getCell(12);
+        BigDecimal db12new = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getIvrCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        c12new.setCellValue(db12new.doubleValue());
+
+        Cell c10 = row.getCell(13);
+        BigDecimal db10 = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
         c10.setCellValue(db10.doubleValue());
-        Cell c11 = row.getCell(13);
-        BigDecimal db11 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls() - period.getLostCallsIn5Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        Cell c11 = row.getCell(14);
+        BigDecimal db11 = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls() - period.getLostCallsIn5Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
         c11.setCellValue(db11.doubleValue());
 
-        Cell c12 = row.getCell(14);
-        BigDecimal db12 = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        Cell c12 = row.getCell(15);
+        BigDecimal db12 = period.getCalls() - period.getIvrCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec())
+                .divide(new BigDecimal(period.getCalls() - period.getIvrCalls()), 3, RoundingMode.HALF_EVEN);
         c12.setCellValue(db12.doubleValue());
     }
 
@@ -174,13 +181,13 @@ public class OtchetLogic {
         addPeriodRow(row, period, date);
         BigDecimal ap = stat.getAgentWorkTime60min();
         int ansCalls = period.getCalls() - period.getLostCalls();
-        Cell c13 = row.getCell(15);
+        Cell c13 = row.getCell(16);
         c13.setCellValue(stat.getAgentPayedTime60min().doubleValue());
 
-        Cell c14 = row.getCell(16);
+        Cell c14 = row.getCell(17);
         c14.setCellValue(ap.doubleValue());
 
-        Cell c15 = row.getCell(17);
+        Cell c15 = row.getCell(18);
         BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
         c15.setCellValue(db15.doubleValue());
     }
