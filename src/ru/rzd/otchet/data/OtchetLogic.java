@@ -27,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -161,8 +162,9 @@ public class OtchetLogic {
 
         // новый 12 столбец IVR
         Cell c12new = row.getCell(12);
-        BigDecimal db12new = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getIvrCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
-        c12new.setCellValue(db12new.doubleValue());
+//        BigDecimal db12new = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getIvrCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        BigDecimal db12new = new BigDecimal(period.getIvrCalls());
+        c12new.setCellValue(db12new.intValue());
 
         Cell c10 = row.getCell(13);
         BigDecimal db10 = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
@@ -200,12 +202,14 @@ public class OtchetLogic {
         int lost5 = 0;
         int lost = 0;
         int talk = 0;
+        int ivr = 0;
         for (Period p : periodList) {
             all += p.getCalls();
             lost += p.getLostCalls();
             lost5 += p.getLostCallsIn5Sec();
             ans20 += p.getAnswerIn20Sec();
             talk += p.getTalkTime();
+            ivr += p.getIvrCalls();
         }
         Cell c2 = sheet.getRow(1).getCell(2);
         c2.setCellValue(all);
@@ -215,7 +219,7 @@ public class OtchetLogic {
         c4.setCellValue(ans20);
 
         Cell c5 = sheet.getRow(4).getCell(2);
-        BigDecimal bd1 = new BigDecimal(ans20).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd1 = new BigDecimal(ans20).divide(new BigDecimal(all - ivr), 3, RoundingMode.HALF_EVEN);
         c5.setCellValue(bd1.floatValue());
         Cell c6 = sheet.getRow(5).getCell(2);
         c6.setCellValue(lost5);
@@ -251,6 +255,8 @@ public class OtchetLogic {
             folder = f.selectSaveFile();
         }
         if (!folder.isEmpty()) {
+            FormulaEvaluator formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
+            formulaEvaluator.evaluateAll();
             FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xlsx", false);
             wb.write(fos);
             wb.close();
@@ -339,7 +345,6 @@ public class OtchetLogic {
             date.setTimeInMillis(date.getTimeInMillis() + 3600000L);
 
         }
-
         return stats;
     }
 
