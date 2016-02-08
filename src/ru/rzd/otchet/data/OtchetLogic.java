@@ -214,7 +214,7 @@ public class OtchetLogic {
         Cell c2 = sheet.getRow(1).getCell(2);
         c2.setCellValue(all);
         Cell c3 = sheet.getRow(2).getCell(2);
-        c3.setCellValue(all - lost);
+        c3.setCellValue(all - lost - ivr);
         Cell c4 = sheet.getRow(3).getCell(2);
         c4.setCellValue(ans20);
 
