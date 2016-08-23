@@ -190,7 +190,8 @@ public class OtchetLogic {
         c14.setCellValue(ap.doubleValue());
 
         Cell c15 = row.getCell(18);
-        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
+
+        BigDecimal db15 = ap.intValue() == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
         c15.setCellValue(db15.doubleValue());
     }
 
@@ -219,21 +220,21 @@ public class OtchetLogic {
         c4.setCellValue(ans20);
 
         Cell c5 = sheet.getRow(4).getCell(2);
-        BigDecimal bd1 = new BigDecimal(ans20).divide(new BigDecimal(all - ivr), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd1 = (all - ivr) == 0 ? BigDecimal.ZERO : new BigDecimal(ans20).divide(new BigDecimal(all - ivr), 3, RoundingMode.HALF_EVEN);
         c5.setCellValue(bd1.floatValue());
         Cell c6 = sheet.getRow(5).getCell(2);
         c6.setCellValue(lost5);
 
         Cell c7 = sheet.getRow(6).getCell(2);
-        BigDecimal bd2 = new BigDecimal(lost).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd2 = all == 0 ? BigDecimal.ZERO : new BigDecimal(lost).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c7.setCellValue(bd2.floatValue());
 
         Cell c8 = sheet.getRow(7).getCell(2);
-        BigDecimal bd3 = new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd3 = all == 0 ? BigDecimal.ZERO : new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c8.setCellValue(bd3.floatValue());
 
         Cell c9 = sheet.getRow(8).getCell(2);
-        BigDecimal bd4 = new BigDecimal(talk).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd4 = (all - lost) == 0 ? BigDecimal.ZERO : new BigDecimal(talk).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
         c9.setCellValue(bd4.floatValue());
     }
 
