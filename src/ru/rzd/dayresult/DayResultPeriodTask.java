@@ -37,12 +37,14 @@ public class DayResultPeriodTask implements Callable<Void> {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(dateStart.getTimeInMillis());
         String iname = operatorMain.getInitials() + " " + operatorMain.getSurname();
+        String login = dao.findLogin(iname);
+        System.out.println("LOGIN " + login);
 
         while (cal.before(dateEnd) || cal.equals(dateEnd)) {
             Operator op = new Operator(operatorMain.getName(), operatorMain.getSurname());
             task1(cal, op);
             if (op.getLoginTime() != null) {
-                ResultSet rset = dao.getCallDetail(iname, op.getLoginTime());
+                ResultSet rset = dao.getCallDetailWithLogin(login, op.getLoginTime());
                 Timestamp last = new Timestamp(1);
                 while (rset.next()) {
                     int ring = rset.getInt(1);
@@ -51,11 +53,9 @@ public class DayResultPeriodTask implements Callable<Void> {
                     int work = rset.getInt(4);
                     last = rset.getTimestamp(5);
                     op.addTimes(ring, talk, hold, work);
-                    System.out.println("ring " + ring);
                 }
                 if (op.getLastState().equals(AgentState.LogOut) && op.getLastTime().after(last)) {
                     operatorMain.sumOperator(op);
-                    System.out.println("ADDDDD");
                 }
             }
             cal.setTimeInMillis(cal.getTimeInMillis() + 86400000L);
@@ -66,7 +66,7 @@ public class DayResultPeriodTask implements Callable<Void> {
 
     private void task1(Calendar date, Operator operator) throws SQLException {
         String iname = operator.getInitials() + " " + operator.getSurname();
-        String login = dao.findLogin(iname); 
+        String login = dao.findLogin(iname);
         ResultSet rs = dao.getAgentStatesWithLogin(login, date);
         while (rs.next()) {
             AgentState state = AgentState.getByCode(rs.getInt(1));
