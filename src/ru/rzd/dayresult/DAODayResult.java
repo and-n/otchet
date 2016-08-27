@@ -129,6 +129,20 @@ public class DAODayResult {
         getAgentState.setString(3, name);
         return getAgentState.executeQuery();
     }
+    
+     public ResultSet getCallDetailWithLogin(String login, Timestamp startTime) throws SQLException {
+        PreparedStatement getAgentState = connection.prepareStatement("Select  a.ringTime, a.talkTime, a.holdTime, a.workTime, a.startDateTime "
+                + "from AgentConnectionDetail a "
+                + "inner join Resource r on r.resourceID=a.resourceID "
+                + "where a.startDateTime > ? and a.startDateTime < ? and "
+                + "r.resourceLoginId=? order by a.startDateTime");
+        Timestamp end = new Timestamp(startTime.getTime() + 50400000L);
+
+        getAgentState.setTimestamp(1, startTime);
+        getAgentState.setTimestamp(2, end);
+        getAgentState.setString(3, login);
+        return getAgentState.executeQuery();
+    }
 
     String findLogin(String iname) throws SQLException {
         PreparedStatement getLogin = connection.prepareStatement("select resourceLoginId from Resource where resourceName = ? ");
