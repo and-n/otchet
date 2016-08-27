@@ -32,7 +32,9 @@ public class DayResultTask implements Callable<Void> {
     @Override
     public Void call() throws Exception {
         String iname = operator.getInitials() + " " + operator.getSurname();
-        ResultSet rs = dao.getAgentStates(iname, date);
+        String login = dao.findLogin(iname);
+//        ResultSet rs = dao.getAgentStates(iname, date);
+                ResultSet rs = dao.getAgentStatesWithLogin(login, date);
         while (rs.next()) {
             AgentState state = AgentState.getByCode(rs.getInt(1));
             Timestamp time = rs.getTimestamp(2);

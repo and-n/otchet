@@ -66,7 +66,8 @@ public class DayResultPeriodTask implements Callable<Void> {
 
     private void task1(Calendar date, Operator operator) throws SQLException {
         String iname = operator.getInitials() + " " + operator.getSurname();
-        ResultSet rs = dao.getAgentStates(iname, date);
+        String login = dao.findLogin(iname); 
+        ResultSet rs = dao.getAgentStatesWithLogin(login, date);
         while (rs.next()) {
             AgentState state = AgentState.getByCode(rs.getInt(1));
             Timestamp time = rs.getTimestamp(2);
