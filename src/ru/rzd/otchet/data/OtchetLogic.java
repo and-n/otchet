@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,7 +183,7 @@ public class OtchetLogic {
     private void addPeriodRow(Row row, Period period, Calendar date, Statist60min stat) {
         addPeriodRow(row, period, date);
         BigDecimal ap = stat.getAgentWorkTime60min();
-        int ansCalls = period.getCalls() - period.getLostCalls();
+        int ansCalls = period.getCalls() - period.getLostCalls() - period.getIvrCalls();
         Cell c13 = row.getCell(16);
         c13.setCellValue(stat.getAgentPayedTime60min().doubleValue());
 
@@ -291,13 +292,13 @@ public class OtchetLogic {
             spravka = new DAOOtchet();
         }
 
-        Map<Integer, Pair<AgentState, Long>> statesMap = getStartStats(date);
+        LinkedHashMap<Integer, Pair<AgentState, Long>> statesMap = getStartStats(date);
 
         Calendar endOfPeriod = Calendar.getInstance();
         for (int i = 0; i < 24; i++) {
             endOfPeriod.setTimeInMillis(date.getTimeInMillis() + 3600000L);
             ResultSet rs = spravka.getAgentStatePer60min(date);
-            Statist60min sm = new Statist60min();
+            Statist60min  statist60min = new Statist60min();
             while (rs.next()) {
                 AgentState type = AgentState.getByCode(rs.getInt(1));
                 Integer id = new Integer(rs.getInt(3));
@@ -309,7 +310,7 @@ public class OtchetLogic {
                 } else if (type.equals(AgentState.LogOut)) {
                     if (p != null) {
                         if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)) {
-                            sm.addWorkTime(time.getTime() - p.getR());
+                            statist60min.addWorkTime(time.getTime() - p.getR());
                         }
                         statesMap.remove(id);
                     }
@@ -317,7 +318,7 @@ public class OtchetLogic {
                     if (p != null) {
                         // если время от логина не считать рабочим, то добавить логин.
                         if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)) {
-                            sm.addWorkTime(time.getTime() - p.getR());
+                            statist60min.addWorkTime(time.getTime() - p.getR());
                         }
                         type = isPayedReason(rs.getInt(4)) ? AgentState.PayedNotReady : type;
                         statesMap.put(id, new Pair<AgentState, Long>(type, time.getTime()));
@@ -326,10 +327,10 @@ public class OtchetLogic {
                     if (statesMap.get(id) != null) {
                         // если время от логина не считать рабочим, то добавить логин.
                         if (p.getL().equals(AgentState.PayedNotReady)) {
-                            sm.addPayedTime(time.getTime() - p.getR());
+                            statist60min.addPayedTime(time.getTime() - p.getR());
                         } else if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)
                                 || !p.getL().equals(AgentState.PayedNotReady)) {
-                            sm.addWorkTime(time.getTime() - p.getR());
+                            statist60min.addWorkTime(time.getTime() - p.getR());
                         }
                         statesMap.put(id, new Pair<AgentState, Long>(type, time.getTime()));
                     }
@@ -338,11 +339,11 @@ public class OtchetLogic {
             }
             for (int key : statesMap.keySet()) {
                 if (!statesMap.get(key).equals(AgentState.NotReady) || !statesMap.get(key).equals(AgentState.LogIn)) {
-                    sm.addWorkTime(endOfPeriod.getTimeInMillis() - statesMap.get(key).getR());
+                    statist60min.addWorkTime(endOfPeriod.getTimeInMillis() - statesMap.get(key).getR());
                 }
             }
             setTimeToAll(statesMap, endOfPeriod);
-            stats.add(sm);
+            stats.add(statist60min);
             date.setTimeInMillis(date.getTimeInMillis() + 3600000L);
 
         }
@@ -350,9 +351,9 @@ public class OtchetLogic {
     }
 
     // работает
-    private Map<Integer, Pair<AgentState, Long>> getStartStats(Calendar date) throws SQLException {
+    private LinkedHashMap<Integer, Pair<AgentState, Long>> getStartStats(Calendar date) throws SQLException {
         ResultSet res = spravka.getStartAgentState(date);
-        Map<Integer, Pair<AgentState, Long>> states = new HashMap<>();
+        LinkedHashMap<Integer, Pair<AgentState, Long>> states = new LinkedHashMap<>();
         while (res.next()) {
             Integer key = new Integer(res.getInt(3));
             AgentState as = AgentState.getByCode(res.getInt(1));
