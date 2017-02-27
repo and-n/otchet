@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,13 +27,15 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import ru.rzd.otchet.Form;
 import static ru.rzd.otchet.Form.ISCONSOLE;
+import ru.rzd.otchet.Pair;
 
 /**
  *
@@ -44,6 +47,8 @@ public class OtchetLogic {
      * Таймаут запроса данных из базы за пол часа.
      */
     public static final int REQUEST_TIMEOUT = 25;
+
+    public static final int[] PAY_REASON_CODE = new int[]{75, 76};
 
     public static final String ITOG_SUTOK = "Справка по итогам суток ";
     private DAOOtchet spravka;
@@ -65,10 +70,10 @@ public class OtchetLogic {
         calendar.set(Calendar.MILLISECOND, 001);
         ExecutorService executor = Executors.newFixedThreadPool(4);
         List<Future<Period>> flist = new ArrayList<>();
-        for (int i = 0; i < 48; i++) {
+        for (int i = 0; i < 24; i++) {
             Calendar newCal = Calendar.getInstance();
             newCal.setTimeInMillis(
-                    calendar.getTimeInMillis() + (i * 1800000));
+                    calendar.getTimeInMillis() + (i * 3600000));
             OtchetTask task = new OtchetTask(spravka, newCal);
             flist.add(executor.submit(task));
         }
@@ -94,14 +99,14 @@ public class OtchetLogic {
      * @param periodList Лист получасовок.
      * @return
      */
-    public Workbook createPeriodInSpravka(Calendar date, List<Period> periodList, List<Statist30min> stats) {
+    public Workbook createPeriodInSpravka(Calendar date, List<Period> periodList, List<Statist60min> stats) {
         Workbook wb = null;
-        File f = new File("folder" + File.separator + "ШАБЛОН.xls");
+        File f = new File("folder" + File.separator + "ШАБЛОН.xlsx");
         if (f.exists()) {
             try {
-                wb = new HSSFWorkbook(new FileInputStream(f));
+                wb = new XSSFWorkbook(new FileInputStream(f));
                 Sheet sheet = wb.getSheetAt(1);
-                for (int i = 13; i < 61; i++) {
+                for (int i = 13; i < 37; i++) {
                     Row row = sheet.getRow(i);
                     addPeriodRow(row, periodList.get(i - 13), date, stats.get(i - 13));
                 }
@@ -109,6 +114,7 @@ public class OtchetLogic {
             } catch (IOException ex) {
                 Logger.getLogger(OtchetLogic.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NullPointerException ex) {
+                ex.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Неверный файл шаблона!!!");
                 System.exit(1);
             }
@@ -133,44 +139,60 @@ public class OtchetLogic {
         Cell c4 = row.getCell(4);
         c4.setCellValue(period.getCalls());
         Cell c5 = row.getCell(5);
-        int ansCalls = period.getCalls() - period.getLostCalls();
+        int ansCalls = period.getCalls() - period.getLostCalls() - period.getIvrCalls();
         c5.setCellValue(ansCalls);
-        Cell c6 = row.getCell(6);
+        // два новых столбца 6 и 7
+        Cell c6new = row.getCell(6);
+        c6new.setCellValue(period.getLostCalls());
+
+        Cell c7new = row.getCell(7);
+        c7new.setCellValue(period.getAnswerIn20Sec());
+
+        Cell c6 = row.getCell(8);
         int db6 = ansCalls == 0 ? 0 : new BigDecimal(period.getTalkTime()).divide(new BigDecimal(ansCalls), RoundingMode.HALF_EVEN).intValueExact();
         c6.setCellValue(db6);
-        Cell c7 = row.getCell(7);
+        Cell c7 = row.getCell(9);
         int db7 = ansCalls == 0 ? 0 : new BigDecimal(period.getAnswerTime()).divide(new BigDecimal(ansCalls), RoundingMode.HALF_EVEN).intValueExact();
         c7.setCellValue(db7);
 
-        Cell c8 = row.getCell(8);
-        int db8 = ansCalls == 0 ? 0 : new BigDecimal(period.getQueueTime()).divide(new BigDecimal(period.getCalls()), RoundingMode.HALF_EVEN).intValueExact();
+        Cell c8 = row.getCell(10);
+        int db8 = period.getLostCalls() == 0 ? 0 : new BigDecimal(period.getQueueTime()).divide(new BigDecimal(period.getLostCalls()), RoundingMode.HALF_EVEN).intValueExact();
         c8.setCellValue(db8);
-        Cell c9 = row.getCell(9);
+        Cell c9 = row.getCell(11);
         c9.setCellValue(period.getLostCallsIn5Sec());
-        Cell c10 = row.getCell(10);
-        BigDecimal db10 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+
+        // новый 12 столбец IVR
+        Cell c12new = row.getCell(12);
+//        BigDecimal db12new = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getIvrCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        BigDecimal db12new = new BigDecimal(period.getIvrCalls());
+        c12new.setCellValue(db12new.intValue());
+
+        Cell c10 = row.getCell(13);
+        BigDecimal db10 = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
         c10.setCellValue(db10.doubleValue());
-        Cell c11 = row.getCell(11);
-        BigDecimal db11 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls() - period.getLostCallsIn5Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
+        Cell c11 = row.getCell(14);
+        BigDecimal db11 = period.getCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getLostCalls() - period.getLostCallsIn5Sec()).divide(new BigDecimal(period.getCalls()), 3, RoundingMode.HALF_EVEN);
         c11.setCellValue(db11.doubleValue());
 
-        Cell c12 = row.getCell(12);
-        BigDecimal db12 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec()).divide(new BigDecimal(ansCalls), 3, RoundingMode.HALF_EVEN);
+        Cell c12 = row.getCell(15);
+        BigDecimal db12 = period.getCalls() - period.getIvrCalls() == 0 ? BigDecimal.ZERO : new BigDecimal(period.getAnswerIn20Sec())
+                .divide(new BigDecimal(period.getCalls() - period.getIvrCalls()), 3, RoundingMode.HALF_EVEN);
         c12.setCellValue(db12.doubleValue());
     }
 
-    private void addPeriodRow(Row row, Period period, Calendar date, Statist30min stat) {
+    private void addPeriodRow(Row row, Period period, Calendar date, Statist60min stat) {
         addPeriodRow(row, period, date);
-        BigDecimal ap = stat.getAgentPer30min();
-        int ansCalls = period.getCalls() - period.getLostCalls();
-        Cell c13 = row.getCell(13);
-        c13.setCellValue(ap.doubleValue());
-        Cell c14 = row.getCell(14);
+        BigDecimal ap = stat.getAgentWorkTime60min();
+        int ansCalls = period.getCalls() - period.getLostCalls() - period.getIvrCalls();
+        Cell c13 = row.getCell(16);
+        c13.setCellValue(stat.getAgentPayedTime60min().doubleValue());
+
+        Cell c14 = row.getCell(17);
         c14.setCellValue(ap.doubleValue());
 
-        Cell c15 = row.getCell(15);
-        BigDecimal db15 = ansCalls == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN)
-                .divide(new BigDecimal(2));
+        Cell c15 = row.getCell(18);
+
+        BigDecimal db15 = ap.intValue() == 0 ? BigDecimal.ZERO : new BigDecimal(ansCalls).divide(ap, 3, RoundingMode.HALF_EVEN);
         c15.setCellValue(db15.doubleValue());
     }
 
@@ -181,32 +203,40 @@ public class OtchetLogic {
         int ans20 = 0;
         int lost5 = 0;
         int lost = 0;
+        int talk = 0;
+        int ivr = 0;
         for (Period p : periodList) {
             all += p.getCalls();
             lost += p.getLostCalls();
             lost5 += p.getLostCallsIn5Sec();
             ans20 += p.getAnswerIn20Sec();
+            talk += p.getTalkTime();
+            ivr += p.getIvrCalls();
         }
         Cell c2 = sheet.getRow(1).getCell(2);
         c2.setCellValue(all);
         Cell c3 = sheet.getRow(2).getCell(2);
-        c3.setCellValue(all - lost);
+        c3.setCellValue(all - lost - ivr);
         Cell c4 = sheet.getRow(3).getCell(2);
         c4.setCellValue(ans20);
 
         Cell c5 = sheet.getRow(4).getCell(2);
-        BigDecimal bd1 = new BigDecimal(ans20).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd1 = (all - ivr) == 0 ? BigDecimal.ZERO : new BigDecimal(ans20).divide(new BigDecimal(all - ivr), 3, RoundingMode.HALF_EVEN);
         c5.setCellValue(bd1.floatValue());
         Cell c6 = sheet.getRow(5).getCell(2);
         c6.setCellValue(lost5);
 
         Cell c7 = sheet.getRow(6).getCell(2);
-        BigDecimal bd2 = new BigDecimal(lost).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd2 = all == 0 ? BigDecimal.ZERO : new BigDecimal(lost).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c7.setCellValue(bd2.floatValue());
 
         Cell c8 = sheet.getRow(7).getCell(2);
-        BigDecimal bd3 = new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
+        BigDecimal bd3 = all == 0 ? BigDecimal.ZERO : new BigDecimal(lost - lost5).divide(new BigDecimal(all), 3, RoundingMode.HALF_EVEN);
         c8.setCellValue(bd3.floatValue());
+
+        Cell c9 = sheet.getRow(8).getCell(2);
+        BigDecimal bd4 = (all - lost) == 0 ? BigDecimal.ZERO : new BigDecimal(talk).divide(new BigDecimal(all - lost), 3, RoundingMode.HALF_EVEN);
+        c9.setCellValue(bd4.floatValue());
     }
 
     private String getFileName(String ITOG_SUTOK, Calendar date) {
@@ -216,7 +246,7 @@ public class OtchetLogic {
 
     public void createReport(Calendar date, Form f) throws SQLException, FileNotFoundException, IOException {
         List<Period> report = getReportByDay(date);
-        List<Statist30min> stats = getStatsByDay(date, null);
+        List<Statist60min> stats = getStatsByDay(date);
         Workbook wb = createPeriodInSpravka(date, report, stats);
         String fileName = getFileName(OtchetLogic.ITOG_SUTOK, date);
         String folder = "";
@@ -227,7 +257,9 @@ public class OtchetLogic {
             folder = f.selectSaveFile();
         }
         if (!folder.isEmpty()) {
-            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xls", false);
+            FormulaEvaluator formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
+            formulaEvaluator.evaluateAll();
+            FileOutputStream fos = new FileOutputStream(folder + File.separator + fileName + ".xlsx", false);
             wb.write(fos);
             wb.close();
             fos.close();
@@ -247,90 +279,108 @@ public class OtchetLogic {
 
     }
 
-    private List<Statist30min> getStatsByDay(Calendar cal, Map<Integer, AgentState> statesMap) throws SQLException {
+    private List<Statist60min> getStatsByDay(Calendar cal) throws SQLException {
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(cal.getTimeInMillis());
-        List<Statist30min> stats = new ArrayList<>();
-        if (spravka == null) {
-            spravka = new DAOOtchet();
-        }
-        if (statesMap == null) {
-            statesMap = getStartStats(date);
-        }
-
         date.set(Calendar.HOUR_OF_DAY, 0);
         date.set(Calendar.MINUTE, 0);
         date.set(Calendar.SECOND, 0);
         date.set(Calendar.MILLISECOND, 0);
+
+        List<Statist60min> stats = new ArrayList<>();
+        if (spravka == null) {
+            spravka = new DAOOtchet();
+        }
+
+        LinkedHashMap<Integer, Pair<AgentState, Long>> statesMap = getStartStats(date);
+
         Calendar endOfPeriod = Calendar.getInstance();
-        for (int i = 0; i < 48; i++) {
-            endOfPeriod.setTimeInMillis(date.getTimeInMillis() + 1800000L);
-            ResultSet rs = spravka.getAgentStatePer30min(date);
-            int worked = getWorked(statesMap);
-            Statist30min sm = new Statist30min(worked);
+        for (int i = 0; i < 24; i++) {
+            endOfPeriod.setTimeInMillis(date.getTimeInMillis() + 3600000L);
+            ResultSet rs = spravka.getAgentStatePer60min(date);
+            Statist60min  statist60min = new Statist60min();
             while (rs.next()) {
                 AgentState type = AgentState.getByCode(rs.getInt(1));
                 Integer id = new Integer(rs.getInt(3));
                 Timestamp time = rs.getTimestamp(2);
+                Pair<AgentState, Long> p = statesMap.get(id);
+
                 if (type.equals(AgentState.LogIn)) {
-//                    sm.addWorkAgent();
-//                    sm.addWorkTime(date.getTimeInMillis() - time.getTime());
-                    statesMap.put(id, type);
+                    statesMap.put(id, new Pair<>(type, time.getTime()));
                 } else if (type.equals(AgentState.LogOut)) {
-                    if (statesMap.get(id) != null && statesMap.get(id).equals(AgentState.Ready)) {
-                        sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
+                    if (p != null) {
+                        if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)) {
+                            statist60min.addWorkTime(time.getTime() - p.getR());
+                        }
+                        statesMap.remove(id);
                     }
-                    statesMap.remove(id);
-                } else if (type.equals(AgentState.Ready)) {
-                    if (statesMap.get(id) == null || !statesMap.get(id).equals(AgentState.Ready)) {
-                        sm.addWorkTime(endOfPeriod.getTimeInMillis() - time.getTime());
-                    }
-                    statesMap.put(id, type);
                 } else if (type.equals(AgentState.NotReady)) {
-//                    sm.removeWorkAgent();
-                    sm.addWorkTime(time.getTime() - endOfPeriod.getTimeInMillis());
-                    statesMap.put(id, type);
+                    if (p != null) {
+                        // если время от логина не считать рабочим, то добавить логин.
+                        if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)) {
+                            statist60min.addWorkTime(time.getTime() - p.getR());
+                        }
+                        type = isPayedReason(rs.getInt(4)) ? AgentState.PayedNotReady : type;
+                        statesMap.put(id, new Pair<AgentState, Long>(type, time.getTime()));
+                    }
+                } else {
+                    if (statesMap.get(id) != null) {
+                        // если время от логина не считать рабочим, то добавить логин.
+                        if (p.getL().equals(AgentState.PayedNotReady)) {
+                            statist60min.addPayedTime(time.getTime() - p.getR());
+                        } else if (!p.getL().equals(AgentState.NotReady) || !p.getL().equals(AgentState.LogIn)
+                                || !p.getL().equals(AgentState.PayedNotReady)) {
+                            statist60min.addWorkTime(time.getTime() - p.getR());
+                        }
+                        statesMap.put(id, new Pair<AgentState, Long>(type, time.getTime()));
+                    }
                 }
                 // removeLogOuts(statesMap);
             }
-            stats.add(sm);
-            date.setTimeInMillis(date.getTimeInMillis() + 1800000L);
-        }
+            for (int key : statesMap.keySet()) {
+                if (!statesMap.get(key).equals(AgentState.NotReady) || !statesMap.get(key).equals(AgentState.LogIn)) {
+                    statist60min.addWorkTime(endOfPeriod.getTimeInMillis() - statesMap.get(key).getR());
+                }
+            }
+            setTimeToAll(statesMap, endOfPeriod);
+            stats.add(statist60min);
+            date.setTimeInMillis(date.getTimeInMillis() + 3600000L);
 
+        }
         return stats;
     }
 
     // работает
-    private Map<Integer, AgentState> getStartStats(Calendar date) throws SQLException {
+    private LinkedHashMap<Integer, Pair<AgentState, Long>> getStartStats(Calendar date) throws SQLException {
         ResultSet res = spravka.getStartAgentState(date);
-        Map<Integer, AgentState> states = new HashMap<>();
+        LinkedHashMap<Integer, Pair<AgentState, Long>> states = new LinkedHashMap<>();
         while (res.next()) {
-            Integer key = new Integer(res.getInt(1));
-            int as = res.getInt(2);
-            if (as == AgentState.LogIn.ordinal() || as == AgentState.Ready.ordinal()
-                    || states.containsKey(key)) {
-                states.put(key, AgentState.getByCode(as));
-            }
+            Integer key = new Integer(res.getInt(3));
+            AgentState as = AgentState.getByCode(res.getInt(1));
+            Timestamp time = res.getTimestamp(2);
+            Pair<AgentState, Long> p = new Pair<AgentState, Long>(as, new Long(time.getTime()));
+            states.put(key, p);
         }
-        Set<Integer> s = new HashSet<Integer>(states.keySet());
-        for (Integer i : s) {
-            AgentState as = states.get(i);
-            if (as.equals(AgentState.LogOut)) {
-                states.remove(i);
-            }
-        }
+        setTimeToAll(states, date);
         return states;
     }
 
-    private int getWorked(Map<Integer, AgentState> statesMap) {
-        int l = 0;
-        for (Integer i : statesMap.keySet()) {
-            if (statesMap.get(i).equals(AgentState.Ready)) {
-                ++l;
+    private void setTimeToAll(Map<Integer, Pair<AgentState, Long>> states, Calendar date) {
+        Set<Integer> s = new HashSet<Integer>(states.keySet());
+        for (Integer i : s) {
+            Pair p = states.get(i);
+            p.setR(date.getTimeInMillis());
+            states.put(i, p);
+        }
+    }
+
+    private boolean isPayedReason(int code) {
+        for (int i = 0; i < PAY_REASON_CODE.length; i++) {
+            if (PAY_REASON_CODE[i] == code) {
+                return true;
             }
         }
-        System.out.println("WORKED " + l);
-        return l;
+        return false;
     }
 
 }

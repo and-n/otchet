@@ -7,6 +7,7 @@ import java.math.RoundingMode;
  *
  * @author ATonevitskiy
  */
+@Deprecated
 public class Statist30min {
 
     private final long min30 = 1800000L;

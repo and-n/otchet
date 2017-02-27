@@ -94,6 +94,27 @@ public class DAODayResult {
         getAgentState.setString(3, name);
         return getAgentState.executeQuery();
     }
+    
+    public ResultSet getAgentStatesWithLogin(String login, Calendar date) throws SQLException {
+        PreparedStatement getAgentState = connection.prepareStatement("Select  a.eventType, a.eventDateTime from AgentStateDetail a "
+                + "inner join Resource r on r.resourceID=a.agentID "
+                + "where a.eventDateTime > ? and a.eventDateTime < ? "
+                + "and r.resourceLoginId = ? order by a.eventDateTime");
+        Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
+                19, 0, 0, 1);
+        Timestamp end = new Timestamp(tStart.getTime());
+        end.setHours(23);
+        end.setMinutes(59);
+        end.setSeconds(59);
+        end.setNanos(999999);
+
+        tStart.setTime(tStart.getTime() - 86400000L);
+
+        getAgentState.setTimestamp(1, tStart);
+        getAgentState.setTimestamp(2, end);
+        getAgentState.setString(3, login);
+        return getAgentState.executeQuery();
+    }
 
     public ResultSet getCallDetail(String name, Timestamp startTime) throws SQLException {
         PreparedStatement getAgentState = connection.prepareStatement("Select  a.ringTime, a.talkTime, a.holdTime, a.workTime, a.startDateTime "
@@ -107,6 +128,32 @@ public class DAODayResult {
         getAgentState.setTimestamp(2, end);
         getAgentState.setString(3, name);
         return getAgentState.executeQuery();
+    }
+    
+     public ResultSet getCallDetailWithLogin(String login, Timestamp startTime) throws SQLException {
+        PreparedStatement getAgentState = connection.prepareStatement("Select  a.ringTime, a.talkTime, a.holdTime, a.workTime, a.startDateTime "
+                + "from AgentConnectionDetail a "
+                + "inner join Resource r on r.resourceID=a.resourceID "
+                + "where a.startDateTime > ? and a.startDateTime < ? and "
+                + "r.resourceLoginId=? order by a.startDateTime");
+        Timestamp end = new Timestamp(startTime.getTime() + 50400000L);
+
+        getAgentState.setTimestamp(1, startTime);
+        getAgentState.setTimestamp(2, end);
+        getAgentState.setString(3, login);
+        return getAgentState.executeQuery();
+    }
+
+    String findLogin(String iname) throws SQLException {
+        PreparedStatement getLogin = connection.prepareStatement("select resourceLoginId from Resource where resourceName = ? ");
+        String login = "noValue";
+        getLogin.setString(1, iname);
+        ResultSet res = getLogin.executeQuery();
+        if (res.next()) {
+            login = res.getString(1);
+        }
+        
+        return login;
     }
 
 }

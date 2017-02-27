@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ru.rzd.otchet.data;
 
 import java.sql.Connection;
@@ -25,8 +20,7 @@ public class DAOOtchet {
 
     private Connection connection;
 
-    private PreparedStatement getAgentStatePer30min;
-    private PreparedStatement getStartAgentState;
+    private PreparedStatement getAgentState;
 
     public DAOOtchet() {
         if (connection == null) {
@@ -48,12 +42,8 @@ public class DAOOtchet {
         try {
             connection = DriverManager.getConnection(connectionUrl1);
             simpleReq = connection.prepareStatement("SELECT COUNT(*) FROM RtICDStatistics");
-            getAgentStatePer30min = connection.prepareCall("Select  eventType, eventDateTime, agentID from AgentStateDetail "
-                    + "where eventDateTime > ? and eventDateTime < ? and "
-                    + "(eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
-            getStartAgentState = connection.prepareCall("Select agentID,  eventType from AgentStateDetail "
-                    + "where eventDateTime > ? and eventDateTime < ? and "
-                    + "(eventType=2 or eventType=3 or eventType=7) order by eventDateTime");
+            getAgentState = connection.prepareCall("Select  eventType, eventDateTime, agentID, reasonCode from AgentStateDetail "
+                    + "where eventDateTime > ? and eventDateTime < ? order by eventDateTime");
         } catch (SQLException ex) {
             if (!Form.ISCONSOLE) {
                 Logger.getLogger(DAOOtchet.class.getName()).log(Level.SEVERE, null, ex);
@@ -77,9 +67,11 @@ public class DAOOtchet {
         return rs;
     }
 
+    @Deprecated
     public ResultSet get30minPeriod(Calendar date) throws SQLException {
 
-        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime from ContactCallDetail c"
+        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime"
+                + " from ContactCallDetail c"
                 + " left join ContactQueueDetail q ON c.sessionID = q.sessionID "
                 + " left join AgentConnectionDetail a ON q.sessionID =a.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
                 + "and c.applicationID=0");
@@ -97,32 +89,67 @@ public class DAOOtchet {
         return res;
     }
 
+    public ResultSet get60minPeriod(Calendar date) throws SQLException {
+
+        PreparedStatement getPeriod = connection.prepareCall("Select q.queueTime, a.ringTime, a.talkTime, a.holdTime, a.workTime, c.sessionID "
+                + "from ContactCallDetail c"
+                + " left join ContactQueueDetail q ON c.sessionID = q.sessionID "
+                + " left join AgentConnectionDetail a ON q.sessionID =a.sessionID  where c.startDateTime > ? and c.startDateTime < ? "
+                + "and c.applicationID=0 order by c.startDateTime");
+        getPeriod.clearParameters();
+        Timestamp tStart = new Timestamp(date.getTimeInMillis());
+        tStart.setNanos(0);
+        Timestamp end = new Timestamp(tStart.getTime());
+        end.setTime(tStart.getTime() + 3600000);
+//        end.setMinutes(end.getMinutes() + 29);
+//        end.setSeconds(59);
+//        end.setNanos(999999);
+        getPeriod.setTimestamp(1, tStart);
+        getPeriod.setTimestamp(2, end);
+        System.out.println("Date " + tStart + "  END " + end);
+        ResultSet res = getPeriod.executeQuery();
+        return res;
+    }
+
     public ResultSet getStartAgentState(Calendar date) throws SQLException {
-        getStartAgentState.clearParameters();
+        getAgentState.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
-                19, 0, 0, 1);
+                23, 0, 0, 1);
         tStart.setTime(tStart.getTime() - 86400000L);
         Timestamp end = new Timestamp(tStart.getTime());
         end.setHours(23);
         end.setMinutes(59);
         end.setSeconds(59);
         end.setNanos(999999);
-        getStartAgentState.setTimestamp(1, tStart);
-        getStartAgentState.setTimestamp(2, end);
+        getAgentState.setTimestamp(1, tStart);
+        getAgentState.setTimestamp(2, end);
 //        System.out.println("DateStart " + tStart + "  END " + end);
-        ResultSet res = getStartAgentState.executeQuery();
+        ResultSet res = getAgentState.executeQuery();
         return res;
     }
 
+    @Deprecated
     public ResultSet getAgentStatePer30min(Calendar date) throws SQLException {
-        getAgentStatePer30min.clearParameters();
+        getAgentState.clearParameters();
         Timestamp tStart = new Timestamp(date.get(Calendar.YEAR) - 1900, date.get(Calendar.MONTH), date.get(Calendar.DAY_OF_MONTH),
                 date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE), date.get(Calendar.SECOND), 1);
-        Timestamp end = new Timestamp(tStart.getTime() + 1800000);
-        getAgentStatePer30min.setTimestamp(1, tStart);
-        getAgentStatePer30min.setTimestamp(2, end);
+        Timestamp end = new Timestamp(tStart.getTime() + 1800000L);
+        getAgentState.setTimestamp(1, tStart);
+        getAgentState.setTimestamp(2, end);
 //        System.out.println("DateAgentState " + tStart + "  END " + end);
-        ResultSet res = getAgentStatePer30min.executeQuery();
+        ResultSet res = getAgentState.executeQuery();
+        return res;
+    }
+
+    public ResultSet getAgentStatePer60min(Calendar date) throws SQLException {
+        getAgentState.clearParameters();
+        Timestamp tStart = new Timestamp(date.getTimeInMillis());
+        tStart.setNanos(0);
+        Timestamp end = new Timestamp(tStart.getTime() + 3600000L);
+        getAgentState.setTimestamp(1, tStart);
+        getAgentState.setTimestamp(2, end);
+//        System.out.println("DateAgentState " + tStart + "  END " + end);
+        ResultSet res = getAgentState.executeQuery();
         return res;
     }
 

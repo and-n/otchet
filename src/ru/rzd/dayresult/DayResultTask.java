@@ -32,7 +32,9 @@ public class DayResultTask implements Callable<Void> {
     @Override
     public Void call() throws Exception {
         String iname = operator.getInitials() + " " + operator.getSurname();
-        ResultSet rs = dao.getAgentStates(iname, date);
+        String login = dao.findLogin(iname);
+//        ResultSet rs = dao.getAgentStates(iname, date);
+                ResultSet rs = dao.getAgentStatesWithLogin(login, date);
         while (rs.next()) {
             AgentState state = AgentState.getByCode(rs.getInt(1));
             Timestamp time = rs.getTimestamp(2);
@@ -82,24 +84,42 @@ public class DayResultTask implements Callable<Void> {
             // переведенные звонки
             // cell = row.getCell(4);
 //            cell.setCellValue(operator.getWaitTime() / operator.getStaffTime()*100);
-
             // % UTZ
             cell = row.getCell(5);
-            cell.setCellValue(new BigDecimal(operator.getStaffTime() - operator.getUnpaidTime())
-                    .divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
-
-            // Поствызовная обработка, %
+            if (staffTime.compareTo(BigDecimal.ZERO) == 1) {
+                cell.setCellValue(new BigDecimal(operator.getStaffTime() - operator.getUnpaidTime())
+                        .divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
+            } else {
+                cell.setCellValue(0);
+            }
             cell = row.getCell(6);
-            cell.setCellValue(new BigDecimal(operator.getWorkTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
-            // Ring Time (среднее время на 1 звонок), сек
+            if (staffTime.compareTo(BigDecimal.ZERO) == 1) {
+                // Поствызовная обработка, %
+                cell.setCellValue(new BigDecimal(operator.getWorkTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
+            } else {
+                cell.setCellValue(0);
+            }
             cell = row.getCell(7);
-            cell.setCellValue(new BigDecimal(operator.getHoldTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
-            // Ring Time (среднее время на 1 звонок), сек
+            if (staffTime.compareTo(BigDecimal.ZERO) == 1) {
+                // Ring Time (среднее время на 1 звонок), сек
+                cell.setCellValue(new BigDecimal(operator.getHoldTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
+            } else {
+                cell.setCellValue(0);
+            }
             cell = row.getCell(8);
-            cell.setCellValue(new BigDecimal(operator.getRingTime()).divide(allCalls, 2, RoundingMode.HALF_EVEN).doubleValue());
-            // Состояние "недоступен для приема входящих звонков" (Обед+Перерыв).
+            if (allCalls.compareTo(BigDecimal.ZERO) == 1) {
+                // Ring Time (среднее время на 1 звонок), сек
+                cell.setCellValue(new BigDecimal(operator.getRingTime()).divide(allCalls, 2, RoundingMode.HALF_EVEN).doubleValue());
+            } else {
+                cell.setCellValue(0);
+            }
             cell = row.getCell(9);
-            cell.setCellValue(new BigDecimal(operator.getUnpaidTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
+            if (staffTime.compareTo(BigDecimal.ZERO) == 1) {
+                // Состояние "недоступен для приема входящих звонков" (Обед+Перерыв).
+                cell.setCellValue(new BigDecimal(operator.getUnpaidTime()).divide(staffTime, 3, RoundingMode.HALF_EVEN).doubleValue());
+            } else {
+                cell.setCellValue(0);
+            }
             // Всего звонков, распределенных на диспетчера, шт
             cell = row.getCell(10);
             cell.setCellValue(operator.getAllCalls());
@@ -123,7 +143,11 @@ public class DayResultTask implements Callable<Void> {
             cell.setCellValue(operator.getMissCalls());
             // пропущенные вызовы
             cell = row.getCell(15);
-            cell.setCellValue(new BigDecimal(operator.getMissCalls()).divide(allCalls, 3, RoundingMode.HALF_EVEN).doubleValue());
+            if (allCalls.compareTo(BigDecimal.ZERO) == 1) {
+                cell.setCellValue(new BigDecimal(operator.getMissCalls()).divide(allCalls, 3, RoundingMode.HALF_EVEN).doubleValue());
+            } else {
+                cell.setCellValue(0);
+            }
         }
     }
 
